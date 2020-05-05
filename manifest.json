@@ -1,0 +1,37 @@
+{
+  "name": "YouTube AV Sync",
+  "version": "0.0.1",
+  "manifest_version": 2,
+  "description": "YouTube AV Sync",
+  "offline_enabled": true,
+  "icons": {
+    "19": "img/icon19.png",
+    "38": "img/icon38.png",
+    "48": "img/icon48.png",
+    "128": "img/icon128.png"
+  },
+  "background": {
+    "scripts": ["js/background.js", "js/eventPage.js"]
+  },
+  "permissions": [
+    "activeTab",
+    "webRequest",
+    "*://*.googlevideo.com/*",
+	"*://*.youtube.com/*",
+	"http://localhost/*",
+    "webRequestBlocking",
+    "storage"
+  ],
+  "browser_action": {
+    "default_title": "YouTube AV Sync"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*.youtube.com/*"],
+      "js": ["js/content-script.js"],
+      "run_at": "document_start",
+      "all_frames": true
+    }
+  ],
+  "options_page": "html/options.html"
+}
