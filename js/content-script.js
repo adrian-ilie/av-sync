@@ -1,5 +1,6 @@
 const muteVolumeAdjustment = 100000;
 const syncAudioElementName = 'syncAudio';
+var globalDelayValue = 0;
 
 function getCssProperty(className, property){
    var elem = document.getElementsByClassName(className)[0];
@@ -29,7 +30,7 @@ function adjustVolumeForSync(event)
 		var leftVolumeBarValue = getCssProperty("ytp-volume-slider-handle", "left").match(/\d+/);
 					
 		const audioElement = window.document.getElementById(syncAudioElementName);
-		if(leftVolumeBarValue === 0)
+		if(leftVolumeBarValue == 0)
 		{
 			audioElement.volume = 0;
 		}
@@ -100,8 +101,6 @@ var mainLoopId = setInterval(
 	},
 700);
 				
-var globalDelayValue = 0;
-
 function adjustLag(){	
 	const audioElement = window.document.getElementById(syncAudioElementName);
 	const videoElement = window.document.getElementsByTagName('video')[0];

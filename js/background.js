@@ -35,40 +35,8 @@ class Background {
                     url: this.tabIds.get(tabId),
                 });
             }
-        };
-		
-		this.putJSON = (url, payload, callback) => {
-			var xhr = new XMLHttpRequest();
-			xhr.open('PUT', url, true);
-			xhr.setRequestHeader("Content-Type", "application/json");
-			xhr.onload = function() {
-			  var status = xhr.status;
-			  if (status === 200) {
-				callback(null, xhr.response);
-			  } else {
-				callback(status, xhr.response);
-			  }
-			};
-			xhr.send(JSON.stringify(payload));
-		};		
-		
-		this.toggleTuneBlade = (status) =>
-		{
-			if(status != undefined && status != "")
-			{
-				chrome.storage.local.get({
-					tuneBladePort: "",
-					airplayDevices: []}, (items) => {
-						if(items.tuneBladePort != undefined && items.airplayDevices != undefined)
-						{
-							items.airplayDevices.forEach((airplayDevice) => { 
-								this.putJSON("http://localhost:"+items.tuneBladePort+"/devices/"+airplayDevice.value, {"Status": status}, function() {}); 
-							});
-						}
-					});
-			}
-		}
-		
+        };			
+					
         this.enableExtension = () => {
             chrome.browserAction.setIcon({
                 path: {
@@ -77,8 +45,7 @@ class Background {
                 },
             });
             chrome.tabs.onUpdated.addListener(this.sendMessage);
-            chrome.webRequest.onBeforeRequest.addListener(this.processRequest, { urls: ['<all_urls>'] }, ['blocking']);
-			this.toggleTuneBlade("Connect");
+            chrome.webRequest.onBeforeRequest.addListener(this.processRequest, { urls: ['<all_urls>'] });
         };
 		
         this.disableExtension = () => {
@@ -91,7 +58,6 @@ class Background {
             chrome.tabs.onUpdated.removeListener(this.sendMessage);
             chrome.webRequest.onBeforeRequest.removeListener(this.processRequest);
             this.tabIds.clear();
-			this.toggleTuneBlade("Disconnect");
 		};	
 		
         this.saveSettings = (disabled) => {
