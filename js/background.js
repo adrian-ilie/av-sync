@@ -44,6 +44,9 @@ class Background {
                     38: 'img/icon38.png',
                 },
             });
+			
+			chrome.browserAction.setTitle({title: "YouTube AV Sync - Enabled"});
+			
             chrome.tabs.onUpdated.addListener(this.sendMessage);
             chrome.webRequest.onBeforeRequest.addListener(this.processRequest, { urls: ['<all_urls>'] });
         };
@@ -55,6 +58,9 @@ class Background {
                     38: 'img/disabled_icon38.png',
                 },
             });
+			
+			chrome.browserAction.setTitle({title: "YouTube AV Sync - Disabled"});
+			
             chrome.tabs.onUpdated.removeListener(this.sendMessage);
             chrome.webRequest.onBeforeRequest.removeListener(this.processRequest);
             this.tabIds.clear();
