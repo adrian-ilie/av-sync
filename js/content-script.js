@@ -107,8 +107,6 @@ function adjustLag(){
 	
 	if(videoElement != undefined && audioElement != undefined && videoElement.currentTime != 0)
 	{
-		chrome.runtime.sendMessage({"message" : "unmuteTab"});
-
 		const delay = videoElement.currentTime + (globalDelayValue/1000) - audioElement.currentTime;				
 					
 		if(delay > 0.015 || delay < -0.015)

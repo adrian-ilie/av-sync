@@ -10,7 +10,7 @@ function restoreOptions() {
 		delayValue: 0
     }, function (items) {
 		delaySelectorElement.value = items.delayValue;
-		delayNumberElement.innerHTML = items.delayValue +' ms';
+		delayNumberElement.textContent = items.delayValue +' ms';
     });
 }
 
@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', restoreOptions);
 
 function processDelayChange()
 {
-	document.getElementById("delayNumber").innerHTML = delaySelectorElement.value + ' ms';
+	document.getElementById("delayNumber").textContent = delaySelectorElement.value + ' ms';
 	chrome.runtime.sendMessage({"message" : "processDelayChange", "delayValue": delaySelectorElement.value});	
 }
 

@@ -1,6 +1,6 @@
 {
   "name": "YouTube AV Sync",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "manifest_version": 2,
   "description": "Fix audio delay on Youtube when streaming audio",
   "offline_enabled": true,
@@ -10,6 +10,7 @@
     "48": "img/icon48.png",
     "128": "img/icon128.png"
   },
+ 
   "background": {
     "scripts": ["js/background.js", "js/eventPage.js"]
   },
@@ -24,10 +25,11 @@
   },
   "content_scripts": [
     {
-      "matches": ["*://*.youtube.com/*"],
-      "js": ["js/content-script.js"],
-      "run_at": "document_start",
-      "all_frames": true
+      "matches": [
+		"*://*.youtube.com/*"
+		],
+      "js": [ "js/content-script.js" ],
+      "run_at": "document_start"      
     }
   ],
   "options_page": "html/options.html"

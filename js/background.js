@@ -109,12 +109,7 @@ class Background {
         });
 		
 		this.processMessage = (request, sender, sendResponse) => 
-		{
-			if(request.message === "unmuteTab")
-			{
-				chrome.tabs.update(sender.tab.id, { muted: false });
-			}
-			
+		{	
 			if(request.message === "processDelayChange")
 			{
 				const delayValue = request.delayValue;				
@@ -128,22 +123,7 @@ class Background {
 			}
 		};
 		
-		//tab has to be muted during page loading to prevent playing sound from the original video
-		this.processOnUpdated = (tabId, changeInfo, tab) => 
-		{
-			chrome.storage.local.get('is_extension_disabled', (values) => {
-                let disabled = values.is_extension_disabled;
-                if (!disabled) {
-					if(changeInfo.status === "loading")
-					{
-						chrome.tabs.update(tabId, { muted: true });
-					}
-				}
-			});
-		};
-		
 		chrome.runtime.onMessage.addListener(this.processMessage);		
-		chrome.tabs.onUpdated.addListener(this.processOnUpdated);				
     }
 }
 const background = new Background();
