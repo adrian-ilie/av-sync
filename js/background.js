@@ -1,6 +1,8 @@
 class Background {
     constructor() {
+		var tabStorage = [];
         this.tabIds = new Map();
+		this.currentVideoTimeAtExtensionToggle = new Map();
         this.removeURLParameters = (url, parameters) => {
             const urlParts = url.split('?');
             if (urlParts.length < 2)
@@ -45,7 +47,7 @@ class Background {
                 },
             });
 			
-			chrome.browserAction.setTitle({title: "YouTube AV Sync - Enabled"});
+			chrome.browserAction.setTitle({title: "YouTube Audio/Video Sync - Enabled"});
 			
             chrome.tabs.onUpdated.addListener(this.sendMessage);
             chrome.webRequest.onBeforeRequest.addListener(this.processRequest, { urls: ['<all_urls>'] });
@@ -59,7 +61,7 @@ class Background {
                 },
             });
 			
-			chrome.browserAction.setTitle({title: "YouTube AV Sync - Disabled"});
+			chrome.browserAction.setTitle({title: "YouTube Audio/Video Sync - Disabled"});
 			
             chrome.tabs.onUpdated.removeListener(this.sendMessage);
             chrome.webRequest.onBeforeRequest.removeListener(this.processRequest);
@@ -71,6 +73,7 @@ class Background {
         };
 		
         this.tabIds = new Map();
+		
         chrome.storage.local.get('is_extension_disabled', (values) => {
             let disabled = values.is_extension_disabled;
             if (typeof disabled === 'undefined') {
@@ -84,7 +87,7 @@ class Background {
                 this.enableExtension();
             }
         });
-		
+	
         chrome.browserAction.onClicked.addListener(() => {
             chrome.storage.local.get('is_extension_disabled', (values) => {
                 let disabled = values.is_extension_disabled;
@@ -97,16 +100,27 @@ class Background {
                 disabled = !disabled;
                 this.saveSettings(disabled);
             });
+									
             chrome.tabs.query({
                 active: true,
                 currentWindow: true,
                 url: '*://*.youtube.com/*',
             }, (tabs) => {
                 if (tabs.length > 0) {
-                    chrome.tabs.update(tabs[0].id, { url: tabs[0].url });
+					chrome.tabs.sendMessage(tabs[0].id, {"message": "getCurrentTime"}, function(response) {
+						tabStorage[tabs[0].id] = {time: response.currentTime, url: tabs[0].url};
+						
+						chrome.tabs.update(tabs[0].id, { url: tabs[0].url });
+					});
                 }
-            });
+            });		
+			
         });
+		
+		//If for any reason "clearTabStorage" doesn't reach the background script, clear the storage when tab is closed.
+		chrome.tabs.onRemoved.addListener(function(tabId, removed) {
+			tabStorage.splice(tabId, 1);
+		});
 		
 		this.processMessage = (request, sender, sendResponse) => 
 		{	
@@ -120,6 +134,23 @@ class Background {
 						chrome.tabs.sendMessage(tabs[i].id, message);
 					}
 				});
+			}
+			
+			if(request.message === "getCurrentBeforeToggle")
+			{ 
+				if(tabStorage[sender.tab.id] != undefined)
+				{
+					sendResponse(tabStorage[sender.tab.id]);
+				}
+				else 
+				{
+					sendResponse("notFound");
+				}
+			}
+			
+			if(request.message === "clearTabStorage")
+			{
+				tabStorage.splice(sender.tab.id, 1);
 			}
 		};
 		

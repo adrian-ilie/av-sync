@@ -19,6 +19,6 @@ document.addEventListener('DOMContentLoaded', restoreOptions);
 function processDelayChange()
 {
 	document.getElementById("delayNumber").textContent = delaySelectorElement.value + ' ms';
-	chrome.runtime.sendMessage({"message" : "processDelayChange", "delayValue": delaySelectorElement.value});	
+	chrome.runtime.sendMessage({"message" : "processDelayChange", "delayValue": delaySelectorElement.value});
 }
 
