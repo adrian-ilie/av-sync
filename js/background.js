@@ -89,6 +89,8 @@ class Background {
         });
 	
         chrome.browserAction.onClicked.addListener(() => {
+			chrome.browserAction.setBadgeText({text: ""});
+
             chrome.storage.local.get('is_extension_disabled', (values) => {
                 let disabled = values.is_extension_disabled;
                 if (disabled) {
@@ -113,8 +115,7 @@ class Background {
 						chrome.tabs.update(tabs[0].id, { url: tabs[0].url });
 					});
                 }
-            });		
-			
+            });			
         });
 		
 		//If for any reason "clearTabStorage" doesn't reach the background script, clear the storage when tab is closed.
@@ -136,7 +137,7 @@ class Background {
 				});
 			}
 			
-			if(request.message === "getCurrentBeforeToggle")
+			if(request.message === "getCurrentTimeBeforeToggle")
 			{ 
 				if(tabStorage[sender.tab.id] != undefined)
 				{
@@ -151,6 +152,17 @@ class Background {
 			if(request.message === "clearTabStorage")
 			{
 				tabStorage.splice(sender.tab.id, 1);
+			}
+			
+			if(request.message === "setWaitingBadge")
+			{
+				chrome.browserAction.setBadgeText({text: "⌛", tabId: sender.tab.id});
+				chrome.browserAction.setBadgeBackgroundColor({color: "#FFFFFF", tabId: sender.tab.id});
+			}
+			
+			if(request.message === "removeWaitingBadge")
+			{
+				chrome.browserAction.setBadgeText({text: "", tabId: sender.tab.id});
 			}
 		};
 		
