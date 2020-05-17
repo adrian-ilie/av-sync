@@ -164,8 +164,6 @@ function adjustLag(acceptableDeviation){
 	const videoElement = window.document.getElementsByTagName('video')[0];
 	const audioElement = window.document.getElementById(syncAudioElementName);
 
-	console.log("adjustLag called with: " + acceptableDeviation)
-
 	if(videoElement != undefined )
 	{		
 		//remove audio sync element when video is gone
@@ -178,10 +176,19 @@ function adjustLag(acceptableDeviation){
 		{
 			var delay = videoElement.currentTime + (globalDelayValue/1000) - audioElement.currentTime;
 			var differenceFromPrevious = delay - previousDelay;
-	
 			if(Math.abs(delay) > acceptableDeviation) //outside of the acceptable precision, keep trying
 			{
-				var adjustment = 0.077; //to identify dynamic way to retrieve this adjustment depending on the browser
+				//console.log("delay: "+delay);
+								
+				var adjustment //todo: identify dynamic way to retrieve this adjustment depending on the browser
+				//Chrome only
+				= 0.077; 
+				//End Chrome only
+				
+				//Firefox only
+				//= 0.09; 
+				//End Firefox only				
+				
 				audioElement.muted = true;
 				
 				//if the previous difference was of a similar value, give it a kick so that it does'n get stuck
@@ -202,15 +209,24 @@ function adjustLag(acceptableDeviation){
 			}			
 			else
 			{
+				//console.log("found delay: " + delay);
 				audioElement.muted = false;
-				startSecondaryAdjustLagLoop(acceptableDeviation);
 				
+				//Chrome only
+				//In chrome we can adjust the sync as it goes, usually once in sync it will stay in sync.
+				startSecondaryAdjustLagLoop(acceptableDeviation);
+				//End chrome only
+
+				//Firefox only:
+				//In Firefox we do not want to stop and resync because it goes too easily out of sync.
+				//Todo: Implement option to be able to chose how often it should resync
+				//clearInterval(mainLoopId);
+				//End Firefox only:
+
 				if(!videoElement.paused) { audioElement.play(); }
 				
 				chrome.runtime.sendMessage({message: "removeWaitingBadge"});
 			}
-			
-			console.log(delay);
 		}		
 	}
 }

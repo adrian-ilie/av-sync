@@ -1,15 +1,14 @@
 {
-  "name": "YouTube Audio/Video Sync",
+  "name": "YouTube AV Sync",
   "version": "0.0.6",
   "manifest_version": 2,
   "description": "Fix wireless audio streaming delay for YouTube",
-  "offline_enabled": true,
   "icons": {
     "19": "img/icon19.png",
     "38": "img/icon38.png",
     "48": "img/icon48.png",
     "128": "img/icon128.png"
-  }, 
+  },
   "background": {
     "scripts": ["js/background.js", "js/eventPage.js"]
   },
@@ -17,19 +16,20 @@
 	"webRequest",
     "*://*.googlevideo.com/*",
 	"*://*.youtube.com/*",
-    "storage"
+    "storage",
+	"tabs"
   ],
   "browser_action": {
     "default_title": "YouTube Audio/Video Sync"
   },
   "content_scripts": [
     {
-      "matches": [
-		"*://*.youtube.com/*"
-		],
-      "js": [ "js/content-script.js" ],
-      "run_at": "document_start"      
-    }
+      "matches": ["*://*.youtube.com/*"],
+      "js": ["js/content-script.js"],
+      "run_at": "document_start"
+	}
   ],
-  "options_page": "html/options.html"
+  "options_ui": {
+	"page": "html/options.html"
+  }
 }
