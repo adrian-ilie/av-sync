@@ -133,10 +133,13 @@ function addDelayControls()
 		ytpTimeDurationElement.insertAdjacentHTML('afterend', '<span id = "delayControls"> \
 			<span class="ytp-time-separator">&nbsp;&nbsp;&nbsp;</span> \
 			<button id = "decreaseDelayButton" style="width: 24px; border-radius: 50%; outline: none; box-shadow: none;">-</button> \
-			<input type="number" id="delayInPlayer" title = "Delay in milliseconds" value = ' + globalDelayValue + ' style="width: 38px; text-align: right;" \
+			<input type="number" id="delayInPlayer" title = "Delay in milliseconds" style="color: white; background: transparent; border: none; text-align: right;" \
 				min="-' + globalMaxSelectableDelayValue + '" max="' + globalMaxSelectableDelayValue + '"> \
+			<span>ms</span> \
 			<button id = "increaseDelayButton" style="width: 24px; border-radius: 50%; outline: none; box-shadow: none;">+</button> \
 			</span>');
+
+		processPlayerDelayChange(globalDelayValue);
 
 		document.getElementById("delayInPlayer").addEventListener('keydown', processDelayInPlayerKeyDown, true);
 		document.getElementById("delayInPlayer").addEventListener('input', processDelayInPlayer);
@@ -181,9 +184,10 @@ function processPlayerDelayChange(adjustedValue)
 	{
 		adjustedValue = 0;
 	}
-	
+
 	const delayInPlayerElement = window.document.getElementById("delayInPlayer");
 	delayInPlayerElement.value = adjustedValue;
+	delayInPlayerElement.style.width = ((delayInPlayerElement.value.length) * 8) + 'px';
 
 	if (delayInPlayerElement.checkValidity())
 	{
@@ -352,7 +356,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 		globalDelayValue = request.delayValue;
 		if(document.getElementById("delayControls") != null)
 		{
-			window.document.getElementById("delayInPlayer").value = request.delayValue;	
+			processPlayerDelayChange(request.delayValue);
 		}			
 	}
 	
