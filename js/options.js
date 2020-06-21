@@ -13,7 +13,7 @@ function restoreOptions() {
     chrome.storage.local.get({
 		delayValue: 0,
 		maxSelectableDelay: 5000
-    }, function (items) {		
+    }, function (items) {
 		updateDelayElements(items.delayValue);
 		updatemaxSelectableDelayElement(items.maxSelectableDelay);
     });
@@ -59,7 +59,7 @@ function processMaxSelectableDelay()
 		delayInput.setAttribute("max", maxSelectableDelayElement.value);
 		
 		chrome.runtime.sendMessage({"message" : "processDelayChange", "delayValue": delaySelectorElement.value});
-		chrome.storage.local.set({ "maxSelectableDelay": maxSelectableDelayElement.value });
+		chrome.runtime.sendMessage({"message" : "maxSelectableDelayChange", "maxSelectableDelayValue": maxSelectableDelayElement.value});
 	}
 	else
 	{

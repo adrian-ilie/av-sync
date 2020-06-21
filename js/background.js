@@ -151,6 +151,18 @@ class Background {
 				});
 			}
 			
+			if(request.message === "maxSelectableDelayChange")
+			{
+				const maxSelectableDelayValue = request.maxSelectableDelayValue;				
+				chrome.storage.local.set({ "maxSelectableDelay": maxSelectableDelayValue });				
+				chrome.tabs.query({}, function(tabs) {
+					var message = {"message": "maxSelectableDelayChanged", "maxSelectableDelayValue": maxSelectableDelayValue};
+					for (var i=0; i<tabs.length; ++i) {
+						chrome.tabs.sendMessage(tabs[i].id, message);
+					}
+				});
+			}
+			
 			if(request.message === "getCurrentTimeBeforeToggle")
 			{ 
 				if(tabStorage[sender.tab.id] != undefined)

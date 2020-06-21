@@ -1,6 +1,7 @@
 const muteVolumeAdjustment = 100000;
 const syncAudioElementName = 'syncAudio';
 var globalDelayValue = 0;
+var globalMaxSelectableDelayValue = 0;
 var previousDelay = 0;
 var mainLoopId;
 var isMainLoopRunning = false;
@@ -94,8 +95,11 @@ function makeSetAudioURL(videoElement, url) {
     function setAudioURL() {
 		turnVolumeForVideoToInaudible(videoElement); //is this needed?
 		
-		chrome.storage.local.get('delayValue', (values) => {
+		chrome.storage.local.get({delayValue: 0,
+								  maxSelectableDelayValue: 5000}, (values) => {
 			globalDelayValue = values.delayValue;
+			globalMaxSelectableDelayValue = values.maxSelectableDelayValue;
+			addDelayControls();
 		});
 
         if (url === '' || videoElement.src === url) {
@@ -109,10 +113,79 @@ function makeSetAudioURL(videoElement, url) {
 		videoElement.addEventListener('pause', pauseSyncAudio);	
 		adjustVolumeForSyncByVideoElement(videoElement);
 		
-		startMainAdjustLagLoop(0.008);
+		startMainAdjustLagLoop(0.008);		
     }
 
     return setAudioURL;
+}
+
+function addDelayControls()
+{
+	const delayInPlayerElement = window.document.getElementById("delayInPlayer");
+	if(delayInPlayerElement === null)
+	{
+		const ytpTimeDurationElement = document.getElementsByClassName('ytp-time-duration')[0];
+		ytpTimeDurationElement.insertAdjacentHTML('afterend', '<span class="ytp-time-separator">&nbsp;&nbsp;&nbsp;</span> \
+			<button id = "decreaseDelayButton" style="width: 24px; border-radius: 50%; outline: none; box-shadow: none;">-</button> \
+			<input type="number" id="delayInPlayer" value = ' + globalDelayValue + ' style="width: 38px; text-align: right;" \
+				min="-' + globalMaxSelectableDelayValue + '" max="' + globalMaxSelectableDelayValue + '"> \
+			<button id = "increaseDelayButton" style="width: 24px; border-radius: 50%; outline: none; box-shadow: none;">+</button>');
+
+		document.getElementById("delayInPlayer").addEventListener('keydown', processDelayInPlayerKeyDown, true);
+		document.getElementById("delayInPlayer").addEventListener('input', processDelayInPlayer);
+		
+		document.getElementById("increaseDelayButton").addEventListener('click', processDelayAdjustButtonClick, true);
+		document.getElementById("decreaseDelayButton").addEventListener('click', processDelayAdjustButtonClick, true);
+	}
+}
+
+function processDelayAdjustButtonClick(event)
+{
+	var adjustment = 0;
+	if(this.id === "increaseDelayButton")
+	{
+		adjustment = 1;
+	}		
+	else if(this.id === "decreaseDelayButton")
+	{
+		adjustment = -1;
+	}
+	
+	const delayInPlayerElement = window.document.getElementById("delayInPlayer");
+	var adjustedValue = parseInt(delayInPlayerElement.value) + adjustment;
+
+	processPlayerDelayChange(adjustedValue);
+}
+
+function processDelayInPlayerKeyDown(event)
+{
+	//needed in order to override youtube player keydown events.
+	event.stopPropagation();
+}
+
+function processDelayInPlayer(event)
+{
+	processPlayerDelayChange(this.value);
+}
+
+function processPlayerDelayChange(adjustedValue)
+{
+	if(adjustedValue === "")
+	{
+		adjustedValue = 0;
+	}
+	
+	const delayInPlayerElement = window.document.getElementById("delayInPlayer");
+	delayInPlayerElement.value = adjustedValue;
+
+	if (delayInPlayerElement.checkValidity())
+	{
+		globalDelayValue = adjustedValue;
+	}
+	else
+	{
+		delayInPlayerElement.reportValidity();
+	}
 }
 
 window.addEventListener('DOMContentLoaded', (event) => {
@@ -270,6 +343,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 	if(request.message === "delayChanged")
 	{
 		globalDelayValue = request.delayValue;
+		window.document.getElementById("delayInPlayer").value = request.delayValue;		
+	}
+	
+	if(request.message === "maxSelectableDelayChanged")
+	{
+		globalMaxSelectableDelayValue = request.maxSelectableDelayValue;
+		window.document.getElementById("delayInPlayer").setAttribute("min", -globalMaxSelectableDelayValue);
+		window.document.getElementById("delayInPlayer").setAttribute("max", globalMaxSelectableDelayValue);		
 	}
 	
 	if(request.message === "getCurrentTime")
