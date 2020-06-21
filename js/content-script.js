@@ -96,10 +96,15 @@ function makeSetAudioURL(videoElement, url) {
 		turnVolumeForVideoToInaudible(videoElement); //is this needed?
 		
 		chrome.storage.local.get({delayValue: 0,
-								  maxSelectableDelayValue: 5000}, (values) => {
+								  maxSelectableDelayValue: 5000,
+								  delayControlsInPlayerValue: true}, (values) => {
 			globalDelayValue = values.delayValue;
 			globalMaxSelectableDelayValue = values.maxSelectableDelayValue;
-			addDelayControls();
+			
+			if(values.delayControlsInPlayerValue)
+			{
+				addDelayControls();
+			}
 		});
 
         if (url === '' || videoElement.src === url) {
@@ -125,11 +130,13 @@ function addDelayControls()
 	if(delayInPlayerElement === null)
 	{
 		const ytpTimeDurationElement = document.getElementsByClassName('ytp-time-duration')[0];
-		ytpTimeDurationElement.insertAdjacentHTML('afterend', '<span class="ytp-time-separator">&nbsp;&nbsp;&nbsp;</span> \
+		ytpTimeDurationElement.insertAdjacentHTML('afterend', '<span id = "delayControls"> \
+			<span class="ytp-time-separator">&nbsp;&nbsp;&nbsp;</span> \
 			<button id = "decreaseDelayButton" style="width: 24px; border-radius: 50%; outline: none; box-shadow: none;">-</button> \
-			<input type="number" id="delayInPlayer" value = ' + globalDelayValue + ' style="width: 38px; text-align: right;" \
+			<input type="number" id="delayInPlayer" title = "Delay in milliseconds" value = ' + globalDelayValue + ' style="width: 38px; text-align: right;" \
 				min="-' + globalMaxSelectableDelayValue + '" max="' + globalMaxSelectableDelayValue + '"> \
-			<button id = "increaseDelayButton" style="width: 24px; border-radius: 50%; outline: none; box-shadow: none;">+</button>');
+			<button id = "increaseDelayButton" style="width: 24px; border-radius: 50%; outline: none; box-shadow: none;">+</button> \
+			</span>');
 
 		document.getElementById("delayInPlayer").addEventListener('keydown', processDelayInPlayerKeyDown, true);
 		document.getElementById("delayInPlayer").addEventListener('input', processDelayInPlayer);
@@ -343,14 +350,36 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 	if(request.message === "delayChanged")
 	{
 		globalDelayValue = request.delayValue;
-		window.document.getElementById("delayInPlayer").value = request.delayValue;		
+		if(document.getElementById("delayControls") != null)
+		{
+			window.document.getElementById("delayInPlayer").value = request.delayValue;	
+		}			
 	}
 	
 	if(request.message === "maxSelectableDelayChanged")
 	{
 		globalMaxSelectableDelayValue = request.maxSelectableDelayValue;
-		window.document.getElementById("delayInPlayer").setAttribute("min", -globalMaxSelectableDelayValue);
-		window.document.getElementById("delayInPlayer").setAttribute("max", globalMaxSelectableDelayValue);		
+	    if(document.getElementById("delayControls") != null)
+		{
+			window.document.getElementById("delayInPlayer").setAttribute("min", -globalMaxSelectableDelayValue);
+			window.document.getElementById("delayInPlayer").setAttribute("max", globalMaxSelectableDelayValue);		
+		}
+	}
+	
+	if(request.message === "delayControlsInPlayerChanged")
+	{
+		var showDelayControls = request.delayControlsInPlayerValue;
+		if(showDelayControls)
+		{
+			addDelayControls();
+		}
+		else
+		{
+			if(document.getElementById("delayControls") != null)
+			{
+				document.getElementById("delayControls").remove();
+			}
+		}			
 	}
 	
 	if(request.message === "getCurrentTime")

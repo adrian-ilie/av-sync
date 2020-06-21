@@ -21,10 +21,15 @@
 				</div>
 				<small id="delaySelectorHelp" class="form-text text-muted">Enter your delay in milliseconds or select it from the slider. Use <kbd>&#8592;</kbd> or <kbd>&#8594;</kbd> to fine tune.</small>
 				<br/>
+				<div class="form-check">
+					<input type="checkbox" class="form-check-input" id="delayControlsInPlayerCheckbox">
+					<label class="form-check-label" for="delayControlsInPlayerCheckbox">Show delay controls in the YouTube player</label>
+				</div>
+				<small id="delayControlsInPlayerCheckboxHelp" class="form-text text-muted">The controls will only show when the extension is enabled.</small>
+				<br/>
 				<label for="maxSelectableDelay"><strong>Maximum Selectable Delay (ms)</strong></label>
 				<input type="number" class="form-control" id="maxSelectableDelay" style="width: 200px;" value="5000" min="5000">
 				<small id="delaySelectorHelp" class="form-text text-muted">This setting allows you to increase the range of the slider. Only change this if your delay is higher than 5 seconds.</small>
-
 			</div>
 			<br/>					
 		</fieldset>
