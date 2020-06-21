@@ -2,20 +2,24 @@ const delayInput = document.getElementById('delayInput');
 const delaySelectorElement = document.getElementById('delaySelector');
 const delayNumberElement = document.getElementById("delayNumber");
 const maxSelectableDelayElement = document.getElementById('maxSelectableDelay');
+const delayControlsInPlayerElement = document.getElementById('delayControlsInPlayerCheckbox');
 
 delayInput.addEventListener("input", processDelayInputChange);
 delaySelectorElement.addEventListener('change', processDelayChange);
 maxSelectableDelayElement.addEventListener("input", processMaxSelectableDelay);
+delayControlsInPlayerElement.addEventListener('change', processDelayControlsInPlayerChange);
 
 function restoreOptions() {
 	document.getElementById("delaySelector").focus();
 
     chrome.storage.local.get({
 		delayValue: 0,
-		maxSelectableDelay: 5000
+		maxSelectableDelayValue: 5000,
+		delayControlsInPlayerValue: true
     }, function (items) {
 		updateDelayElements(items.delayValue);
-		updatemaxSelectableDelayElement(items.maxSelectableDelay);
+		updateMaxSelectableDelayElement(items.maxSelectableDelayValue);
+		updateDelayControlsInPlayer(items.delayControlsInPlayerValue);
     });
 }
 
@@ -67,6 +71,11 @@ function processMaxSelectableDelay()
 	}	
 }
 
+function processDelayControlsInPlayerChange()
+{
+	chrome.runtime.sendMessage({"message" : "delayControlsInPlayerChange", "delayControlsInPlayerValue": this.checked});
+}
+
 function updateDelayElements(delayValue)
 {
 	delayInput.value = delayValue;
@@ -80,9 +89,13 @@ function updateDelaySeletorTooltip(delayValue)
 	delayNumberElement.textContent = delayValueInSeconds +' s';
 }
 
-function updatemaxSelectableDelayElement(maxSelectableDelay)
+function updateMaxSelectableDelayElement(maxSelectableDelay)
 {
 	maxSelectableDelayElement.value = maxSelectableDelay;
 	processMaxSelectableDelay();
 }
 
+function updateDelayControlsInPlayer(showDelayControlsInPlayer)
+{
+	delayControlsInPlayerElement.checked = showDelayControlsInPlayer;
+}
