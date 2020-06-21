@@ -7,15 +7,24 @@
 <div class="container">
 	<form class="bd-example">
 		<fieldset>
-			<h1><img src="../img/icon128.png" width="70" height="70">YouTube Audio/Video Sync</h1>
+			<h2><img src="../img/icon128.png" width="70" height="70"> YouTube Audio/Video Sync - Options</h2>
 			<br/>
 			<div class="form-group">
-				<label for="delaySelector"><strong>Audio Latency</strong></label>
+				<label for="delaySelector"><strong>Audio Delay (ms)</strong></label>
+				<input type="number" class="form-control" id="delayInput" style="width: 200px;" min="-5000" max="5000" data-toggle="tooltip" data-placement="right" title="Tooltip on right">
+				<div class="invalid-feedback">
+				  Please chose a valid number in milliseconds between -5000 and 5000
+				</div>
 				<div class="range-slider" aria-describedby="delaySelectorHelp">
-					<input class="range-slider__range" id="delaySelector" name="delaySelector" type="range" value="2000" min="0" max="5000" step="1">
+					<input class="range-slider__range" id="delaySelector" name="delaySelector" type="range" value="0" min="-5000" max="5000" step="1">
 					<span class="range-slider__value" id="delayNumber">0</span>
 				</div>
-				<small id="delaySelectorHelp" class="form-text text-muted">Select approximate latency and use <kbd>&#8595;</kbd> and <kbd>&#8593;</kbd> to fine tune.</small>
+				<small id="delaySelectorHelp" class="form-text text-muted">Enter your delay in milliseconds or select it from the slider. Use <kbd>&#8592;</kbd> or <kbd>&#8594;</kbd> to fine tune.</small>
+				<br/>
+				<label for="maxSelectableDelay"><strong>Maximum Selectable Delay (ms)</strong></label>
+				<input type="number" class="form-control" id="maxSelectableDelay" style="width: 200px;" value="5000" min="5000">
+				<small id="delaySelectorHelp" class="form-text text-muted">This setting allows you to increase the range of the slider. Only change this if your delay is higher than 5 seconds.</small>
+
 			</div>
 			<br/>					
 		</fieldset>

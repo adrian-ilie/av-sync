@@ -82,7 +82,11 @@ function playSyncAudio(event){
 function pauseSyncAudio(){
 	const audioElement = window.document.getElementById(syncAudioElementName);
 	audioElement.pause();
-	chrome.runtime.sendMessage({message: "removeWaitingBadge"});	
+	
+	if(isValidChromeRuntime())
+	{
+		chrome.runtime.sendMessage({message: "removeWaitingBadge"});
+	}
 	clearMainAdjustLagLoop();
 };
 
@@ -114,7 +118,7 @@ function makeSetAudioURL(videoElement, url) {
 window.addEventListener('DOMContentLoaded', (event) => {
 	const videoElement = window.document.getElementsByTagName('video')[0];
 		
-    if(videoElement != undefined)
+    if(videoElement != undefined && isValidChromeRuntime())
 	{
 		chrome.runtime.sendMessage({message: "getCurrentTimeBeforeToggle"}, function(response) {
 			if(response != "notFound" && response.time > 0 && response.url === window.location.href)
@@ -199,8 +203,11 @@ function adjustLag(acceptableDeviation){
 
 				audioElement.currentTime += delay + adjustment;
 				
-				chrome.runtime.sendMessage({message: "setWaitingBadge"});
-				
+				if(isValidChromeRuntime())
+				{
+					chrome.runtime.sendMessage({message: "setWaitingBadge"});
+				}
+												
 				//the first time an unnacceptable deviation is detected from the secondary loop, start the main loop 
 				if(!isMainLoopRunning)
 				{
@@ -225,9 +232,25 @@ function adjustLag(acceptableDeviation){
 
 				if(!videoElement.paused) { audioElement.play(); }
 				
-				chrome.runtime.sendMessage({message: "removeWaitingBadge"});
+				if(isValidChromeRuntime())
+				{
+					chrome.runtime.sendMessage({message: "removeWaitingBadge"});
+				}
 			}
 		}		
+	}
+}
+
+//When updating the chrome extension, the existing content scripts will be disconnected. This check helps with avoiding error "Extension context invalidated"
+function isValidChromeRuntime() {
+	try
+	{
+		return chrome.runtime && !!chrome.runtime.getManifest();
+	}
+	catch(error)
+	{
+		//todo inform the user and ask to give consent for reloading the page. When consented, call: location.reload();
+		return false;
 	}
 }
 

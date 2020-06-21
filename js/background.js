@@ -37,7 +37,7 @@ class Background {
                     url: this.tabIds.get(tabId),
                 });
             }
-        };			
+        };
 					
         this.enableExtension = () => {
             chrome.browserAction.setIcon({
@@ -47,10 +47,13 @@ class Background {
                 },
             });
 			
+			this.saveSettings(false);
+			
 			chrome.browserAction.setTitle({title: "YouTube Audio/Video Sync - Enabled"});
 			
             chrome.tabs.onUpdated.addListener(this.sendMessage);
             chrome.webRequest.onBeforeRequest.addListener(this.processRequest, { urls: ['<all_urls>'] });
+			background.refreshYoutubeTab.call();
         };
 		
         this.disableExtension = () => {
@@ -61,32 +64,59 @@ class Background {
                 },
             });
 			
+			this.saveSettings(true);
 			chrome.browserAction.setTitle({title: "YouTube Audio/Video Sync - Disabled"});
 			
             chrome.tabs.onUpdated.removeListener(this.sendMessage);
             chrome.webRequest.onBeforeRequest.removeListener(this.processRequest);
             this.tabIds.clear();
+			background.refreshYoutubeTab.call();
 		};	
 		
         this.saveSettings = (disabled) => {
             chrome.storage.local.set({ is_extension_disabled: disabled });
-        };
+        };			
 		
-        this.tabIds = new Map();
+		this.refreshYoutubeTab = () => {
+			chrome.tabs.query({
+                active: true,
+                currentWindow: true,
+                url: '*://*.youtube.com/*',
+            }, (tabs) => {
+                if (tabs.length > 0) {
+						chrome.tabs.sendMessage(tabs[0].id, {"message": "getCurrentTime"}, function(response) {
+
+						//calling chrome.runtime.lastError is needed in order to suppress this error (Chrome bug): "Unchecked runtime.lastError: Could not establish connection. Receiving end does not exist."								
+						if(chrome.runtime.lastError || response === undefined)
+						{
+							chrome.notifications.create('', {
+							  title: 'YouTube Audio/Video Sync',
+							  message: 'The extension has been recently installed or updated. To use it on an already opened youtube tab, you first need to refresh that tab!',
+							  iconUrl: 'img/icon128.png',
+							  type: 'basic',
+							  requireInteraction: true
+							});
+						}
+						else
+						{
+							tabStorage[tabs[0].id] = {time: response.currentTime, url: tabs[0].url};						
+							chrome.tabs.update(tabs[0].id, { url: tabs[0].url });
+						}
+					});
+                }
+            });
+		}
 		
-        chrome.storage.local.get('is_extension_disabled', (values) => {
-            let disabled = values.is_extension_disabled;
-            if (typeof disabled === 'undefined') {
-                disabled = false;
-                this.saveSettings(disabled);
-            }
-            if (disabled) {
-                this.disableExtension();
-            }
-            else {
-                this.enableExtension();
-            }
-        });
+		this.performInstallActions = (details) => {
+			if(details.reason === "install")
+			{
+				const optionsUrl = chrome.runtime.getURL('html/options.html');
+				chrome.tabs.create({url: optionsUrl});
+				
+				this.disableExtension();
+				chrome.storage.local.set({ "delayValue": 0 });				
+            };			
+		}		
 	
         chrome.browserAction.onClicked.addListener(() => {
 			chrome.browserAction.setBadgeText({text: ""});
@@ -98,24 +128,8 @@ class Background {
                 }
                 else {
                     this.disableExtension();
-                }
-                disabled = !disabled;
-                this.saveSettings(disabled);
+                }                
             });
-									
-            chrome.tabs.query({
-                active: true,
-                currentWindow: true,
-                url: '*://*.youtube.com/*',
-            }, (tabs) => {
-                if (tabs.length > 0) {
-					chrome.tabs.sendMessage(tabs[0].id, {"message": "getCurrentTime"}, function(response) {
-						tabStorage[tabs[0].id] = {time: response.currentTime, url: tabs[0].url};
-						
-						chrome.tabs.update(tabs[0].id, { url: tabs[0].url });
-					});
-                }
-            });			
         });
 		
 		//If for any reason "clearTabStorage" doesn't reach the background script, clear the storage when tab is closed.
@@ -164,9 +178,13 @@ class Background {
 			{
 				chrome.browserAction.setBadgeText({text: "", tabId: sender.tab.id});
 			}
-		};
+		};	
 		
-		chrome.runtime.onMessage.addListener(this.processMessage);		
+		chrome.runtime.onMessage.addListener(this.processMessage);
+		
+		chrome.runtime.onInstalled.addListener(this.performInstallActions);
+		chrome.runtime.setUninstallURL("https://docs.google.com/forms/d/e/1FAIpQLSd5gELqtwb9rJQgdK7SRAA5--fZQxTXDLNBIU2pOteHg1Kuig/viewform");		
+		//For firefox: https://docs.google.com/forms/d/e/1FAIpQLSd5gELqtwb9rJQgdK7SRAA5--fZQxTXDLNBIU2pOteHg1Kuig/viewform
     }
 }
 const background = new Background();
