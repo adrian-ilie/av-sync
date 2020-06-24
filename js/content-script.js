@@ -75,7 +75,7 @@ function playSyncAudio(event){
 	const audioElement = window.document.getElementById(syncAudioElementName);
 	if(audioElement != undefined)
 	{		
-		startMainAdjustLagLoop(0.008);		
+		startMainAdjustLagLoop(0.002);		
 		audioElement.play();
 	}
 }
@@ -118,7 +118,7 @@ function makeSetAudioURL(videoElement, url) {
 		videoElement.addEventListener('pause', pauseSyncAudio);	
 		adjustVolumeForSyncByVideoElement(videoElement);
 		
-		startMainAdjustLagLoop(0.008);		
+		startMainAdjustLagLoop(0.002);		
     }
 
     return setAudioURL;
@@ -137,6 +137,7 @@ function addDelayControls()
 				min="-' + globalMaxSelectableDelayValue + '" max="' + globalMaxSelectableDelayValue + '"> \
 			<span>ms</span> \
 			<button id = "increaseDelayButton" style="width: 24px; border-radius: 50%; outline: none; box-shadow: none;">+</button> \
+			<span id = "precision"></span> \
 			</span>');
 
 		processPlayerDelayChange(globalDelayValue);
@@ -146,6 +147,10 @@ function addDelayControls()
 		
 		document.getElementById("increaseDelayButton").addEventListener('click', processDelayAdjustButtonClick, true);
 		document.getElementById("decreaseDelayButton").addEventListener('click', processDelayAdjustButtonClick, true);
+	}
+	else
+	{
+		processPlayerDelayChange(globalDelayValue);
 	}
 }
 
@@ -251,6 +256,7 @@ function clearMainAdjustLagLoop()
 function adjustLag(acceptableDeviation){
 	const videoElement = window.document.getElementsByTagName('video')[0];
 	const audioElement = window.document.getElementById(syncAudioElementName);
+	const precision = window.document.getElementById("precision");
 
 	if(videoElement != undefined )
 	{		
@@ -264,6 +270,8 @@ function adjustLag(acceptableDeviation){
 		{
 			var delay = videoElement.currentTime + (globalDelayValue/1000) - audioElement.currentTime;
 			var differenceFromPrevious = delay - previousDelay;
+			
+			//for debugginhg: precision.innerText = delay;
 			if(Math.abs(delay) > acceptableDeviation) //outside of the acceptable precision, keep trying
 			{
 				//console.log("delay: "+delay);
@@ -282,7 +290,7 @@ function adjustLag(acceptableDeviation){
 				//if the previous difference was of a similar value, give it a kick so that it does'n get stuck
 				if(Math.abs(differenceFromPrevious) < 0.05)
 				{
-					adjustment += differenceFromPrevious * 1.5;
+					adjustment += differenceFromPrevious * (Math.random() * 1.25);//1.5;
 				}
 
 				audioElement.currentTime += delay + adjustment;
