@@ -1,9 +1,10 @@
 # Youtube Audio/Video Sync Chrome Extension, Firefox Addon
 ![](img/icon128.png)
 ### What does it do?
-   On Windows, there is always a delay when streaming audio from your device to another receiver (Apple TV, AirPlay speaker, Sonos, Network Player, TuneBlade, Bluetooth, etc.) This is causing the video and audio to be out of sync.
+   There is always a delay when streaming audio from your device to another receiver (Apple TV, AirPlay speaker, Sonos, Network Player, TuneBlade, Bluetooth, etc.) This is causing the video and audio to be out of sync.
+   There are also videos on YouTube that have not been synced properly before being uploaded.
   
-  This Extension/Addon attempts to solve this issue only for YouTube by allowing the user to adjust the audio delay so it becomes in sync with the video.
+  This Extension/Addon attempts to solve these issues for YouTube by allowing the user to adjust the audio delay so it becomes in sync with the video.
 
 ### How does it work?
    It works by muting the original video and reloading the audio adjusted to the selected delay.
