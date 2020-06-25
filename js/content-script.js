@@ -75,7 +75,7 @@ function playSyncAudio(event){
 	const audioElement = window.document.getElementById(syncAudioElementName);
 	if(audioElement != undefined)
 	{		
-		startMainAdjustLagLoop(0.002);		
+		startMainAdjustLagLoop(0.008);		
 		audioElement.play();
 	}
 }
@@ -118,7 +118,7 @@ function makeSetAudioURL(videoElement, url) {
 		videoElement.addEventListener('pause', pauseSyncAudio);	
 		adjustVolumeForSyncByVideoElement(videoElement);
 		
-		startMainAdjustLagLoop(0.002);		
+		startMainAdjustLagLoop(0.008);		
     }
 
     return setAudioURL;
