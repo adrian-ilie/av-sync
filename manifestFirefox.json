@@ -1,6 +1,6 @@
 {
   "name": "YouTube AV Sync",
-  "version": "0.0.6",
+  "version": "0.1.2",
   "manifest_version": 2,
   "description": "Fix wireless audio streaming delay for YouTube",
   "icons": {
@@ -10,7 +10,7 @@
     "128": "img/icon128.png"
   },
   "background": {
-    "scripts": ["js/background.js", "js/eventPage.js"]
+    "scripts": ["js/background.js"]
   },
   "permissions": [ 
 	"webRequest",

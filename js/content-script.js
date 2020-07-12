@@ -197,6 +197,7 @@ function processPlayerDelayChange(adjustedValue)
 	if (delayInPlayerElement.checkValidity())
 	{
 		globalDelayValue = adjustedValue;
+		startMainAdjustLagLoop(0.008);
 	}
 	else
 	{
@@ -275,15 +276,15 @@ function adjustLag(acceptableDeviation){
 			if(Math.abs(delay) > acceptableDeviation) //outside of the acceptable precision, keep trying
 			{
 				//console.log("delay: "+delay);
-								
-				var adjustment //todo: identify dynamic way to retrieve this adjustment depending on the browser
-				//Chrome only
-				= 0.077; 
-				//End Chrome only
 				
-				//Firefox only
-				//= 0.09; 
-				//End Firefox only				
+				if(navigator.userAgent.indexOf("Chrome") != -1)
+				{					
+					adjustment = 0.077;
+				}
+				else
+				{
+					adjustment = 0.09;
+				}			
 				
 				audioElement.muted = true;
 				
@@ -311,16 +312,15 @@ function adjustLag(acceptableDeviation){
 				//console.log("found delay: " + delay);
 				audioElement.muted = false;
 				
-				//Chrome only
-				//In chrome we can adjust the sync as it goes, usually once in sync it will stay in sync.
-				startSecondaryAdjustLagLoop(acceptableDeviation);
-				//End chrome only
-
-				//Firefox only:
-				//In Firefox we do not want to stop and resync because it goes too easily out of sync.
-				//Todo: Implement option to be able to chose how often it should resync
-				//clearInterval(mainLoopId);
-				//End Firefox only:
+				//In chrome on Windows, we can adjust the sync as it goes, usually once in sync it will stay in sync.				
+				if(isReliableSystem())
+				{
+					startSecondaryAdjustLagLoop(acceptableDeviation);
+				}
+				else //Firefox or other OS than Windows , we do not want to stop and resync because it goes too easily out of sync.
+				{
+					clearMainAdjustLagLoop(); 
+				}
 
 				if(!videoElement.paused) { audioElement.play(); }
 				
@@ -331,6 +331,11 @@ function adjustLag(acceptableDeviation){
 			}
 		}		
 	}
+}
+
+function isReliableSystem()
+{
+	return (navigator.appVersion.indexOf("Win") != -1 && navigator.userAgent.indexOf("Chrome") != -1);
 }
 
 //When updating the chrome extension, the existing content scripts will be disconnected. This check helps with avoiding error "Extension context invalidated"

@@ -113,7 +113,7 @@ class Background {
 				const optionsUrl = chrome.runtime.getURL('html/options.html');
 				chrome.tabs.create({url: optionsUrl});
 				
-				this.disableExtension();
+				this.enableExtension();
 				chrome.storage.local.set({ "delayValue": 0 });				
             };			
 		}		
