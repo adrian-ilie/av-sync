@@ -68,6 +68,13 @@ function createSyncAudioElement(url)
 	document.getElementById('player').appendChild(syncAudioElement);
 }
 
+function changeRateAudio(event){
+	const videoElement = event.target;
+	const audioElement = window.document.getElementById(syncAudioElementName);
+	
+	audioElement.playbackRate = videoElement.playbackRate;
+}
+
 function playSyncAudio(event){
 	const videoElement = event.target;
 	turnVolumeForVideoToInaudible(videoElement);
@@ -116,6 +123,7 @@ function makeSetAudioURL(videoElement, url) {
 		videoElement.addEventListener('volumechange', adjustVolumeForSync);		
 		videoElement.addEventListener('play', playSyncAudio);		
 		videoElement.addEventListener('pause', pauseSyncAudio);	
+		videoElement.addEventListener('ratechange', changeRateAudio);	
 		adjustVolumeForSyncByVideoElement(videoElement);
 		
 		startMainAdjustLagLoop(0.008);		
@@ -130,15 +138,16 @@ function addDelayControls()
 	if(delayInPlayerElement === null)
 	{
 		const ytpTimeDurationElement = document.getElementsByClassName('ytp-time-duration')[0];
+		
 		ytpTimeDurationElement.insertAdjacentHTML('afterend', '<span id = "delayControls"> \
-			<span class="ytp-time-separator">&nbsp;&nbsp;&nbsp;</span> \
-			<button id = "decreaseDelayButton" style="width: 24px; border-radius: 50%; outline: none; box-shadow: none;">-</button> \
-			<input type="number" id="delayInPlayer" title = "Delay in milliseconds" style="color: white; background: transparent; border: none; text-align: right;" \
-				min="-' + globalMaxSelectableDelayValue + '" max="' + globalMaxSelectableDelayValue + '"> \
-			<span>ms</span> \
-			<button id = "increaseDelayButton" style="width: 24px; border-radius: 50%; outline: none; box-shadow: none;">+</button> \
-			<span id = "precision"></span> \
-			</span>');
+				<span class="ytp-time-separator">&nbsp;&nbsp;&nbsp;</span> \
+				<button id = "decreaseDelayButton" style="width: 24px; border-radius: 50%; outline: none; box-shadow: none;">-</button> \
+				<input type="number" id="delayInPlayer" title = "Delay in milliseconds" style="color: white; background: transparent; border: none; text-align: right;" \
+					min="-' + parseInt(globalMaxSelectableDelayValue) + '" max="' + parseInt(globalMaxSelectableDelayValue) + '"> \
+				<span>ms</span> \
+				<button id = "increaseDelayButton" style="width: 24px; border-radius: 50%; outline: none; box-shadow: none;">+</button> \
+				<span id = "precision"></span> \
+				</span>');
 
 		processPlayerDelayChange(globalDelayValue);
 
@@ -258,6 +267,8 @@ function adjustLag(acceptableDeviation){
 	const videoElement = window.document.getElementsByTagName('video')[0];
 	const audioElement = window.document.getElementById(syncAudioElementName);
 	const precision = window.document.getElementById("precision");
+	const playbackRate = videoElement.playbackRate;
+	audioElement.playbackRate = playbackRate;
 
 	if(videoElement != undefined )
 	{		
@@ -293,6 +304,8 @@ function adjustLag(acceptableDeviation){
 				{
 					adjustment += differenceFromPrevious * (Math.random() * 1.25);//1.5;
 				}
+				
+				adjustment *= playbackRate;
 
 				audioElement.currentTime += delay + adjustment;
 				
