@@ -1,10 +1,135 @@
+class Synchronizer
+{	
+	constructor(delayValue, acceptablePrecisionInMs){
+		this.delayValue = delayValue;
+		this.acceptablePrecisionInMs = acceptablePrecisionInMs;
+		this.getVideoElement = () => { return window.document.getElementsByTagName('video')[0] };
+		this.getAudioElement = () => { return window.document.getElementById('syncAudio') };
+		this.getPrecisionElement = () => { return window.document.getElementById("precision") };
+		
+		if(navigator.userAgent.indexOf("Chrome") != -1)
+		{
+			this.adjustment = 0.077;
+		}
+		else
+		{
+			this.adjustment = 0.09;
+		}
+		
+		this.isMainLoopRunning = false;
+		this.mainLoopId = 0;
+	}
+	
+	startMainAdjustLagLoop()
+	{
+		this.startAdjustLagLoop(100);
+		this.isMainLoopRunning = true;
+	}
+	
+	startSecondaryAdjustLagLoop() //less frequent than main loop, currently only used for Chrome
+	{
+		this.startAdjustLagLoop(1000);
+	}
+
+	startAdjustLagLoop(interval)
+	{
+		this.clearMainAdjustLagLoop(this.mainLoopId);
+		this.mainLoopId = setInterval( 
+			function(){ 
+				synchronizer.adjustLag(); 
+			}, interval);
+	}
+
+	clearMainAdjustLagLoop(mainLoopId)
+	{
+		clearInterval(mainLoopId);
+		this.isMainLoopRunning = false;
+	}
+
+	adjustLag(){
+		const videoElement = this.getVideoElement();
+		const audioElement = this.getAudioElement();
+		const precisionElement = this.getPrecisionElement();
+		const unreliableSystemAcceptableDeviation = 5;
+		const playbackRate = videoElement.playbackRate;		
+	
+		if(videoElement != undefined)
+		{
+			//remove audio sync element when video is gone
+			if(videoElement.src === "" && audioElement != undefined)
+			{
+				audioElement.parentNode.removeChild(audioElement);
+			}		
+
+			if(audioElement != undefined && videoElement.currentTime != 0)
+			{
+				if(playbackRate != undefined && playbackRate != null)
+				{
+					audioElement.playbackRate = playbackRate;
+				}
+				
+				var delay = videoElement.currentTime + (this.delayValue/1000) - audioElement.currentTime;
+				
+				//for debugginhg: precision.innerText = delay;
+				
+				if((isReliableSystem() && Math.abs(delay) > this.acceptablePrecisionInMs) || 
+				   (!isReliableSystem() && this.isMainLoopRunning && Math.abs(delay) > this.acceptablePrecisionInMs) ||
+				   (!isReliableSystem() && Math.abs(delay) >= unreliableSystemAcceptableDeviation))
+				   //outside of the acceptable precision, keep trying
+				   //In chrome on Windows, we can adjust the sync as it goes, usually once in sync it will stay in sync, 
+				   //For other systems only retry if the delay is more than 5 seconds (this will cover also the skipping in youtube by pressing left/righ arrows.)			
+				{
+					audioElement.muted = true;
+					var currentAdjustment = this.adjustment;
+					
+					//if the previous difference was of a similar value, give it a kick so that it does'n get stuck					
+					if(Math.abs(delay) < 0.05)
+					{
+						currentAdjustment += delay * (Math.random() * 1.25);//1.5;
+					}
+					
+					if(playbackRate != undefined && playbackRate != null)
+					{
+						currentAdjustment *= playbackRate;
+					}
+
+					audioElement.currentTime += delay + currentAdjustment;
+					
+					if(isValidChromeRuntime())
+					{
+						chrome.runtime.sendMessage({message: "setWaitingBadge"});
+					}
+													
+					//the first time an unnacceptable deviation is detected from the secondary loop, start the main loop 
+					if(!this.isMainLoopRunning)
+					{
+						this.startMainAdjustLagLoop();
+					}
+				}			
+				else
+				{
+					//console.log("found delay: " + delay);
+					audioElement.muted = false;
+					
+					this.startSecondaryAdjustLagLoop();
+
+					if(!videoElement.paused) { audioElement.play(); }
+					
+					if(isValidChromeRuntime())
+					{
+						chrome.runtime.sendMessage({message: "removeWaitingBadge"});
+					}
+				}
+			}		
+		}
+	}
+}
+
+let synchronizer;
+
 const muteVolumeAdjustment = 100000;
 const syncAudioElementName = 'syncAudio';
-var globalDelayValue = 0;
 var globalMaxSelectableDelayValue = 0;
-var previousDelay = 0;
-var mainLoopId;
-var isMainLoopRunning = false;
 
 function getCssProperty(className, property){
    var elem = document.getElementsByClassName(className)[0];
@@ -63,8 +188,12 @@ function createSyncAudioElement(url)
 	var syncAudioElement = document.createElement('audio');
 	syncAudioElement.setAttribute("id", syncAudioElementName);
 	syncAudioElement.src = url;
-	syncAudioElement.autoplay = true;
+	syncAudioElement.autoplay = false;
 	syncAudioElement.muted = false;
+	
+	const videoElement = window.document.getElementsByTagName('video')[0];
+	if(!videoElement.paused) { syncAudioElement.play(); }
+
 	document.getElementById('player').appendChild(syncAudioElement);
 }
 
@@ -72,7 +201,10 @@ function changeRateAudio(event){
 	const videoElement = event.target;
 	const audioElement = window.document.getElementById(syncAudioElementName);
 	
-	audioElement.playbackRate = videoElement.playbackRate;
+	if(audioElement != undefined)
+	{
+		audioElement.playbackRate = videoElement.playbackRate;
+	}
 }
 
 function playSyncAudio(event){
@@ -81,8 +213,12 @@ function playSyncAudio(event){
 			
 	const audioElement = window.document.getElementById(syncAudioElementName);
 	if(audioElement != undefined)
-	{		
-		startMainAdjustLagLoop(0.008);		
+	{
+		if(synchronizer != undefined)
+		{
+			synchronizer.startMainAdjustLagLoop();
+		}
+
 		audioElement.play();
 	}
 }
@@ -95,7 +231,10 @@ function pauseSyncAudio(){
 	{
 		chrome.runtime.sendMessage({message: "removeWaitingBadge"});
 	}
-	clearMainAdjustLagLoop();
+	if(synchronizer != undefined)
+	{
+		synchronizer.clearMainAdjustLagLoop();
+	}
 };
 
 function makeSetAudioURL(videoElement, url) {
@@ -105,13 +244,20 @@ function makeSetAudioURL(videoElement, url) {
 		chrome.storage.local.get({delayValue: 0,
 								  maxSelectableDelayValue: 5000,
 								  delayControlsInPlayerValue: true}, (values) => {
-			globalDelayValue = values.delayValue;
+			
 			globalMaxSelectableDelayValue = values.maxSelectableDelayValue;
 			
 			if(values.delayControlsInPlayerValue)
 			{
+				if(synchronizer == undefined)
+				{
+					synchronizer = new Synchronizer(values.delayValue, 0.008);
+					synchronizer.startMainAdjustLagLoop();
+				}
 				addDelayControls();
+				processPlayerDelayChange(values.delayValue);
 			}
+			
 		});
 
         if (url === '' || videoElement.src === url) {
@@ -125,9 +271,7 @@ function makeSetAudioURL(videoElement, url) {
 		videoElement.addEventListener('pause', pauseSyncAudio);	
 		videoElement.addEventListener('ratechange', changeRateAudio);	
 		adjustVolumeForSyncByVideoElement(videoElement);
-		
-		startMainAdjustLagLoop(0.008);		
-    }
+	}
 
     return setAudioURL;
 }
@@ -149,17 +293,11 @@ function addDelayControls()
 				<span id = "precision"></span> \
 				</span>');
 
-		processPlayerDelayChange(globalDelayValue);
-
 		document.getElementById("delayInPlayer").addEventListener('keydown', processDelayInPlayerKeyDown, true);
 		document.getElementById("delayInPlayer").addEventListener('input', processDelayInPlayer);
 		
 		document.getElementById("increaseDelayButton").addEventListener('click', processDelayAdjustButtonClick, true);
 		document.getElementById("decreaseDelayButton").addEventListener('click', processDelayAdjustButtonClick, true);
-	}
-	else
-	{
-		processPlayerDelayChange(globalDelayValue);
 	}
 }
 
@@ -203,10 +341,13 @@ function processPlayerDelayChange(adjustedValue)
 	delayInPlayerElement.value = adjustedValue;
 	delayInPlayerElement.style.width = ((delayInPlayerElement.value.length) * 8) + 'px';
 
-	if (delayInPlayerElement.checkValidity())
+	if (delayInPlayerElement.checkValidity() && synchronizer != undefined)
 	{
-		globalDelayValue = adjustedValue;
-		startMainAdjustLagLoop(0.008);
+		if(adjustedValue != undefined)
+		{
+			synchronizer.delayValue = adjustedValue;
+		}
+		synchronizer.startMainAdjustLagLoop();
 	}
 	else
 	{
@@ -239,112 +380,6 @@ window.addEventListener("popstate", () => {
 		audioElement.parentNode.removeChild(audioElement);
 	}
 });
-
-function startMainAdjustLagLoop(acceptableDeviation) //less frequent than main loop
-{	
-	startAdjustLagLoop(acceptableDeviation, 100);
-	isMainLoopRunning = true;
-}
-
-function startSecondaryAdjustLagLoop(acceptableDeviation) //less frequent than main loop
-{
-	startAdjustLagLoop(acceptableDeviation, 1000);
-}
-
-function startAdjustLagLoop(acceptableDeviation, interval)
-{
-	clearMainAdjustLagLoop();
-	mainLoopId = setInterval( function(){ adjustLag(acceptableDeviation); }, interval);
-}
-
-function clearMainAdjustLagLoop()
-{
-	clearInterval(mainLoopId);
-	isMainLoopRunning = false;
-}
-
-function adjustLag(acceptableDeviation){
-	const videoElement = window.document.getElementsByTagName('video')[0];
-	const audioElement = window.document.getElementById(syncAudioElementName);
-	const precision = window.document.getElementById("precision");
-	const playbackRate = videoElement.playbackRate;
-	audioElement.playbackRate = playbackRate;
-
-	if(videoElement != undefined )
-	{		
-		//remove audio sync element when video is gone
-		if(videoElement.src === "" && audioElement != undefined)
-		{
-			audioElement.parentNode.removeChild(audioElement);
-		}		
-
-		if(audioElement != undefined && videoElement.currentTime != 0)
-		{
-			var delay = videoElement.currentTime + (globalDelayValue/1000) - audioElement.currentTime;
-			var differenceFromPrevious = delay - previousDelay;
-			
-			//for debugginhg: precision.innerText = delay;
-			if(Math.abs(delay) > acceptableDeviation) //outside of the acceptable precision, keep trying
-			{
-				//console.log("delay: "+delay);
-				
-				if(navigator.userAgent.indexOf("Chrome") != -1)
-				{					
-					adjustment = 0.077;
-				}
-				else
-				{
-					adjustment = 0.09;
-				}			
-				
-				audioElement.muted = true;
-				
-				//if the previous difference was of a similar value, give it a kick so that it does'n get stuck
-				if(Math.abs(differenceFromPrevious) < 0.05)
-				{
-					adjustment += differenceFromPrevious * (Math.random() * 1.25);//1.5;
-				}
-				
-				adjustment *= playbackRate;
-
-				audioElement.currentTime += delay + adjustment;
-				
-				if(isValidChromeRuntime())
-				{
-					chrome.runtime.sendMessage({message: "setWaitingBadge"});
-				}
-												
-				//the first time an unnacceptable deviation is detected from the secondary loop, start the main loop 
-				if(!isMainLoopRunning)
-				{
-					startMainAdjustLagLoop(acceptableDeviation);
-				}
-			}			
-			else
-			{
-				//console.log("found delay: " + delay);
-				audioElement.muted = false;
-				
-				//In chrome on Windows, we can adjust the sync as it goes, usually once in sync it will stay in sync.				
-				if(isReliableSystem())
-				{
-					startSecondaryAdjustLagLoop(acceptableDeviation);
-				}
-				else //Firefox or other OS than Windows , we do not want to stop and resync because it goes too easily out of sync.
-				{
-					clearMainAdjustLagLoop(); 
-				}
-
-				if(!videoElement.paused) { audioElement.play(); }
-				
-				if(isValidChromeRuntime())
-				{
-					chrome.runtime.sendMessage({message: "removeWaitingBadge"});
-				}
-			}
-		}		
-	}
-}
 
 function isReliableSystem()
 {
@@ -379,11 +414,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 	
 	if(request.message === "delayChanged")
 	{
-		globalDelayValue = request.delayValue;
+		synchronizer.delayValue = request.delayValue;
 		if(document.getElementById("delayControls") != null)
 		{
 			processPlayerDelayChange(request.delayValue);
-		}			
+		}
 	}
 	
 	if(request.message === "maxSelectableDelayChanged")
@@ -402,6 +437,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 		if(showDelayControls)
 		{
 			addDelayControls();
+			processPlayerDelayChange(synchronizer.delayValue);
 		}
 		else
 		{
@@ -409,7 +445,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 			{
 				document.getElementById("delayControls").remove();
 			}
-		}			
+		}
 	}
 	
 	if(request.message === "getCurrentTime")
