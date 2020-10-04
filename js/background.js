@@ -132,6 +132,20 @@ class Background {
             });
         });
 		
+		chrome.runtime.onStartup.addListener(() => {
+			chrome.browserAction.setBadgeText({text: ""});
+
+            chrome.storage.local.get('is_extension_disabled', (values) => {
+                let disabled = values.is_extension_disabled;
+                if (disabled) {
+                    this.disableExtension();
+                }
+                else {
+                    this.enableExtension();
+                }                
+            });
+		});
+		
 		//If for any reason "clearTabStorage" doesn't reach the background script, clear the storage when tab is closed.
 		chrome.tabs.onRemoved.addListener(function(tabId, removed) {
 			tabStorage.splice(tabId, 1);
