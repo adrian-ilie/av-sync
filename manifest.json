@@ -18,7 +18,8 @@
     "*://*.googlevideo.com/*",
 	"*://*.youtube.com/*",
     "storage",
-	"notifications"
+	"notifications",
+	"contextMenus"
   ],
   "browser_action": {
     "default_title": "YouTube Audio/Video Sync"

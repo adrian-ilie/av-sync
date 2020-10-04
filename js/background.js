@@ -222,6 +222,38 @@ class Background {
 		chrome.runtime.onMessage.addListener(this.processMessage);
 		
 		chrome.runtime.onInstalled.addListener(this.performInstallActions);
+		
+		function getword(info,tab) {
+		  console.log("Word " + info.selectionText + " was clicked.");
+		  chrome.tabs.create({  
+			url: "http://www.google.com/search?q=" + info.selectionText
+		  });
+		}
+		
+		this.goToReviews = () => {
+			chrome.tabs.create({
+			url: "https://chrome.google.com/webstore/detail/youtube-audiovideo-sync/mknmhikmjljhpccebpnplhicmcfjkgbk/reviews"
+		  });
+		}
+		
+		this.goToBuyMeACoffee = () => {
+			chrome.tabs.create({
+			url: "https://www.buymeacoffee.com/adrianilie"
+		  });
+		}
+		
+		chrome.contextMenus.create({
+		  title: "👍 Review", 
+		  contexts: ["browser_action"],
+		  onclick: this.goToReviews
+		});
+		
+		chrome.contextMenus.create({
+		  title: "☕ Buy me a coffee", 
+		  contexts: ["browser_action"],
+		  onclick: this.goToBuyMeACoffee
+		});		
+		
 		chrome.runtime.setUninstallURL("https://docs.google.com/forms/d/e/1FAIpQLSd5gELqtwb9rJQgdK7SRAA5--fZQxTXDLNBIU2pOteHg1Kuig/viewform");		
 		//For firefox: https://docs.google.com/forms/d/e/1FAIpQLSd5gELqtwb9rJQgdK7SRAA5--fZQxTXDLNBIU2pOteHg1Kuig/viewform
     }
