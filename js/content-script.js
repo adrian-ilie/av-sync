@@ -39,6 +39,11 @@ class Synchronizer
 				synchronizer.adjustLag(); 
 			}, interval);
 	}
+	
+	clearSyncLoop()
+	{
+		clearInterval(this.mainLoopId);
+	}
 
 	clearMainAdjustLagLoop(mainLoopId)
 	{
@@ -52,7 +57,18 @@ class Synchronizer
 		const precisionElement = this.getPrecisionElement();
 		const unreliableSystemAcceptableDeviation = 5;
 		const playbackRate = videoElement.playbackRate;		
-	
+		
+		//Disable sync when switching to a live video.
+		var youTubeliveButton = getYouTubeLiveButtonElement();
+		if(youTubeliveButton !==  undefined)
+		{
+			pauseSyncAudio();
+			this.clearSyncLoop();
+			turnVolumeForVideoToAudible(videoElement);
+			removeDelayControls();
+			return;
+		}
+		
 		if(videoElement != undefined)
 		{
 			//remove audio sync element when video is gone
@@ -148,6 +164,13 @@ function turnVolumeForVideoToInaudible(videoElement){
 	}
 }
 
+function turnVolumeForVideoToAudible(videoElement){
+	if(!isVolumeForVideoAudible(videoElement))
+	{
+		videoElement.volume *= muteVolumeAdjustment;
+	}
+}
+
 function adjustVolumeForSync(event)
 {
 	const videoElement = event.target;
@@ -156,6 +179,12 @@ function adjustVolumeForSync(event)
 
 function adjustVolumeForSyncByVideoElement(videoElement)
 {
+	var youTubeliveButton = getYouTubeLiveButtonElement();
+	if(youTubeliveButton !==  undefined)
+	{
+		return;
+	}
+	
 	if(isVolumeForVideoAudible(videoElement)) //not yet adjusted
 	{				
 		videoElement.volume /= muteVolumeAdjustment;
@@ -207,19 +236,28 @@ function changeRateAudio(event){
 	}
 }
 
-function playSyncAudio(event){
+function playSyncAudio(event){	
 	const videoElement = event.target;
-	turnVolumeForVideoToInaudible(videoElement);
-			
-	const audioElement = window.document.getElementById(syncAudioElementName);
-	if(audioElement != undefined)
-	{
-		if(synchronizer != undefined)
-		{
-			synchronizer.startMainAdjustLagLoop();
-		}
 
-		audioElement.play();
+	var youTubeliveButton = getYouTubeLiveButtonElement();
+	if(youTubeliveButton !==  undefined)
+	{
+		turnVolumeForVideoToAudible(videoElement);
+	}
+	else
+	{
+		turnVolumeForVideoToInaudible(videoElement);
+				
+		const audioElement = window.document.getElementById(syncAudioElementName);
+		if(audioElement != undefined)
+		{
+			if(synchronizer != undefined)
+			{
+				synchronizer.startMainAdjustLagLoop();
+			}
+
+			audioElement.play();
+		}
 	}
 }
 
@@ -230,15 +268,25 @@ function pauseSyncAudio(){
 	if(isValidChromeRuntime())
 	{
 		chrome.runtime.sendMessage({message: "removeWaitingBadge"});
-	}
+	}	
 	if(synchronizer != undefined)
 	{
-		synchronizer.clearMainAdjustLagLoop();
+		synchronizer.clearSyncLoop();
 	}
 };
 
 function makeSetAudioURL(videoElement, url) {
-    function setAudioURL() {
+    function setAudioURL() {		
+		if (url === '' || videoElement.src === url) {
+            return;
+        }
+		
+		
+		if(synchronizer != undefined)
+		{
+			synchronizer.clearSyncLoop();
+		}
+		
 		turnVolumeForVideoToInaudible(videoElement); //is this needed?
 		
 		chrome.storage.local.get({delayValue: 0,
@@ -260,9 +308,7 @@ function makeSetAudioURL(videoElement, url) {
 			
 		});
 
-        if (url === '' || videoElement.src === url) {
-            return;
-        }
+
 
 		createSyncAudioElement(url);
 		
@@ -278,6 +324,12 @@ function makeSetAudioURL(videoElement, url) {
 
 function addDelayControls()
 {
+	var youTubeliveButton = getYouTubeLiveButtonElement();
+	if(youTubeliveButton !==  undefined)
+	{
+		return;
+	}
+	
 	const delayInPlayerElement = window.document.getElementById("delayInPlayer");
 	if(delayInPlayerElement === null)
 	{
@@ -298,6 +350,14 @@ function addDelayControls()
 		
 		document.getElementById("increaseDelayButton").addEventListener('click', processDelayAdjustButtonClick, true);
 		document.getElementById("decreaseDelayButton").addEventListener('click', processDelayAdjustButtonClick, true);
+	}
+}
+
+function removeDelayControls()
+{
+	if(document.getElementById("delayControls") != null)
+	{
+		document.getElementById("delayControls").remove();
 	}
 }
 
@@ -355,11 +415,23 @@ function processPlayerDelayChange(adjustedValue)
 	}
 }
 
-window.addEventListener('DOMContentLoaded', (event) => {
+window.addEventListener('DOMContentLoaded', (event) => {	
+	//needed for a smooth transition to the next video in a playlist.
+	if(synchronizer !== undefined)
+	{
+		synchronizer.clearSyncLoop();
+	}
+	
 	const videoElement = window.document.getElementsByTagName('video')[0];
 		
     if(videoElement != undefined && isValidChromeRuntime())
-	{
+	{		
+		var youTubeliveButton = getYouTubeLiveButtonElement();
+		if(youTubeliveButton !==  undefined)
+		{
+			removeDelayControls();
+		}
+		
 		chrome.runtime.sendMessage({message: "getCurrentTimeBeforeToggle"}, function(response) {
 			if(response != "notFound" && response.time > 0 && response.url === window.location.href)
 				{
@@ -399,12 +471,24 @@ function isValidChromeRuntime() {
 	}
 }
 
+function getYouTubeLiveButtonElement()
+{
+	return document.getElementsByClassName("ytp-live")[0];
+}
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if(request.url != undefined)
+	const videoElements = window.document.getElementsByTagName('video');
+	const videoElement = videoElements[0];		
+		
+	var youTubeliveButton = getYouTubeLiveButtonElement();
+	if(youTubeliveButton !==  undefined)
+	{
+		turnVolumeForVideoToAudible(videoElement);
+	}
+	else if(request.url != undefined)
 	{
 		const url = request.url;		
-		const videoElements = window.document.getElementsByTagName('video');
-		const videoElement = videoElements[0];
+		
 		if (typeof videoElement == 'undefined') {
 			return;
 		}
@@ -441,10 +525,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 		}
 		else
 		{
-			if(document.getElementById("delayControls") != null)
-			{
-				document.getElementById("delayControls").remove();
-			}
+			removeDelayControls();
 		}
 	}
 	
