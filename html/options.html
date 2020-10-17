@@ -30,6 +30,10 @@
 				<label for="maxSelectableDelay"><strong>Maximum Selectable Delay (ms)</strong></label>
 				<input type="number" class="form-control" id="maxSelectableDelay" style="width: 200px;" value="5000" min="5000">
 				<small id="delaySelectorHelp" class="form-text text-muted">This setting allows you to increase the range of the slider. Only change this if your delay is higher than 5 seconds.</small>
+				<br/>
+				<label for="maxAcceptableDelay"><strong>Maximum Acceptable Lip Sync (ms)</strong></label>
+				<input type="number" class="form-control" id="maxAcceptableDelay" style="width: 200px;" value="8" min="8" max="125">
+				<small id="maxAcceptableDelayHelp" class="form-text text-muted">If your computer is struggling to sync, you can try increasing this value. The extension will try and sync the audio without going over this value in either direction.</small>
 			</div>
 			<br/>					
 		</fieldset>

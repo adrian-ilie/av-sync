@@ -6,7 +6,8 @@ class Synchronizer
 		this.getVideoElement = () => { return window.document.getElementsByTagName('video')[0] };
 		this.getAudioElement = () => { return window.document.getElementById('syncAudio') };
 		this.getPrecisionElement = () => { return window.document.getElementById("precision") };
-		
+		this.isValidChromeRuntime = isValidChromeRuntime();
+
 		if(navigator.userAgent.indexOf("Chrome") != -1)
 		{
 			this.adjustment = 0.077;
@@ -57,7 +58,7 @@ class Synchronizer
 		const precisionElement = this.getPrecisionElement();
 		const unreliableSystemAcceptableDeviation = 5;
 		const playbackRate = videoElement.playbackRate;		
-		
+					
 		//Disable sync when switching to a live video.
 		var youTubeliveButton = getYouTubeLiveButtonElement();
 		if(youTubeliveButton !==  undefined)
@@ -75,33 +76,41 @@ class Synchronizer
 			if(videoElement.src === "" && audioElement != undefined)
 			{
 				audioElement.parentNode.removeChild(audioElement);
-			}		
-
-			if(audioElement != undefined && videoElement.currentTime != 0)
+			}	
+		
+			if(audioElement != undefined && videoElement.currentTime != 0 &&
+			   audioElement.buffered.length > 0)
 			{
 				if(playbackRate != undefined && playbackRate != null)
 				{
 					audioElement.playbackRate = playbackRate;
 				}
+				var delayInSeconds = (this.delayValue/1000);
+				var videocurrentime = videoElement.currentTime;
+				var audioCurrentTime=  audioElement.currentTime;
+				var delay = videocurrentime + delayInSeconds - audioCurrentTime;
 				
-				var delay = videoElement.currentTime + (this.delayValue/1000) - audioElement.currentTime;
-				
-				//for debugginhg: precision.innerText = delay;
-				
-				if((isReliableSystem() && Math.abs(delay) > this.acceptablePrecisionInMs) || 
-				   (!isReliableSystem() && this.isMainLoopRunning && Math.abs(delay) > this.acceptablePrecisionInMs) ||
+				//for debugginhg:
+				//console.log(delay);
+				var currentAcceptablePrecision = this.acceptablePrecisionInMs;
+				if(playbackRate >= 1)
+				{
+					currentAcceptablePrecision *= playbackRate;
+				}
+				if((isReliableSystem() && Math.abs(delay) > currentAcceptablePrecision) || 
+				   (!isReliableSystem() && this.isMainLoopRunning && Math.abs(delay) > currentAcceptablePrecision) ||
 				   (!isReliableSystem() && Math.abs(delay) >= unreliableSystemAcceptableDeviation))
 				   //outside of the acceptable precision, keep trying
 				   //In chrome on Windows, we can adjust the sync as it goes, usually once in sync it will stay in sync, 
 				   //For other systems only retry if the delay is more than 5 seconds (this will cover also the skipping in youtube by pressing left/righ arrows.)			
-				{
+				{										
 					audioElement.muted = true;
 					var currentAdjustment = this.adjustment;
 					
 					//if the previous difference was of a similar value, give it a kick so that it does'n get stuck					
-					if(Math.abs(delay) < 0.05)
+					if(Math.abs(delay) < currentAcceptablePrecision * 6.25)
 					{
-						currentAdjustment += delay * (Math.random() * 1.25);//1.5;
+						currentAdjustment += delay * (Math.random() * 1.25 );
 					}
 					
 					if(playbackRate != undefined && playbackRate != null)
@@ -111,7 +120,7 @@ class Synchronizer
 
 					audioElement.currentTime += delay + currentAdjustment;
 					
-					if(isValidChromeRuntime())
+					if(this.isValidChromeRuntime)
 					{
 						chrome.runtime.sendMessage({message: "setWaitingBadge"});
 					}
@@ -123,7 +132,7 @@ class Synchronizer
 					}
 				}			
 				else
-				{
+				{										
 					//console.log("found delay: " + delay);
 					audioElement.muted = false;
 					
@@ -131,7 +140,7 @@ class Synchronizer
 
 					if(!videoElement.paused) { audioElement.play(); }
 					
-					if(isValidChromeRuntime())
+					if(this.isValidChromeRuntime)
 					{
 						chrome.runtime.sendMessage({message: "removeWaitingBadge"});
 					}
@@ -219,6 +228,7 @@ function createSyncAudioElement(url)
 	syncAudioElement.src = url;
 	syncAudioElement.autoplay = false;
 	syncAudioElement.muted = false;
+	syncAudioElement.preload = "auto";
 	
 	const videoElement = window.document.getElementsByTagName('video')[0];
 	if(!videoElement.paused) { syncAudioElement.play(); }
@@ -291,7 +301,8 @@ function makeSetAudioURL(videoElement, url) {
 		
 		chrome.storage.local.get({delayValue: 0,
 								  maxSelectableDelayValue: 5000,
-								  delayControlsInPlayerValue: true}, (values) => {
+								  delayControlsInPlayerValue: true,
+								  maxAcceptableDelayValue: 25}, (values) => {
 			
 			globalMaxSelectableDelayValue = values.maxSelectableDelayValue;
 			
@@ -299,7 +310,7 @@ function makeSetAudioURL(videoElement, url) {
 			{
 				if(synchronizer == undefined)
 				{
-					synchronizer = new Synchronizer(values.delayValue, 0.008);
+					synchronizer = new Synchronizer(values.delayValue, values.maxAcceptableDelayValue/1000);
 					synchronizer.startMainAdjustLagLoop();
 				}
 				addDelayControls();
@@ -512,6 +523,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 		{
 			window.document.getElementById("delayInPlayer").setAttribute("min", -globalMaxSelectableDelayValue);
 			window.document.getElementById("delayInPlayer").setAttribute("max", globalMaxSelectableDelayValue);		
+		}
+	}
+	
+	if(request.message === "maxAcceptableDelayChanged")
+	{
+		var maxAcceptableDelayValue = request.maxAcceptableDelayValue;
+	    if(document.getElementById("delayControls") != null)
+		{
+			synchronizer.acceptablePrecisionInMs = 	maxAcceptableDelayValue/1000;
 		}
 	}
 	

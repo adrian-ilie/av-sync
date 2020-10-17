@@ -168,9 +168,21 @@ class Background {
 			if(request.message === "maxSelectableDelayChange")
 			{
 				const maxSelectableDelayValue = request.maxSelectableDelayValue;				
-				chrome.storage.local.set({ "maxSelectableDelay": maxSelectableDelayValue });				
+				chrome.storage.local.set({ "maxSelectableDelayValue": maxSelectableDelayValue });				
 				chrome.tabs.query({}, function(tabs) {
 					var message = {"message": "maxSelectableDelayChanged", "maxSelectableDelayValue": maxSelectableDelayValue};
+					for (var i=0; i<tabs.length; ++i) {
+						chrome.tabs.sendMessage(tabs[i].id, message);
+					}
+				});
+			}
+			
+			if(request.message === "maxAcceptableDelayChange")
+			{
+				const maxAcceptableDelayValue = request.maxAcceptableDelayValue;				
+				chrome.storage.local.set({ "maxAcceptableDelayValue": maxAcceptableDelayValue });				
+				chrome.tabs.query({}, function(tabs) {
+					var message = {"message": "maxAcceptableDelayChanged", "maxAcceptableDelayValue": maxAcceptableDelayValue};
 					for (var i=0; i<tabs.length; ++i) {
 						chrome.tabs.sendMessage(tabs[i].id, message);
 					}
@@ -230,9 +242,15 @@ class Background {
 		  });
 		}
 		
-		this.goToReviews = () => {
+		//this.goToReviews = () => {
+		//	chrome.tabs.create({
+		//	url: "https://chrome.google.com/webstore/detail/youtube-audiovideo-sync/mknmhikmjljhpccebpnplhicmcfjkgbk/reviews"
+		//  });
+		//}
+		
+		this.goToSupport = () => {
 			chrome.tabs.create({
-			url: "https://chrome.google.com/webstore/detail/youtube-audiovideo-sync/mknmhikmjljhpccebpnplhicmcfjkgbk/reviews"
+			url: "https://chrome.google.com/webstore/detail/youtube-audiovideo-sync/mknmhikmjljhpccebpnplhicmcfjkgbk/support"
 		  });
 		}
 		
@@ -243,16 +261,22 @@ class Background {
 		}
 		
 		chrome.contextMenus.create({
-		  title: "👍 Review", 
+		  title: "⚙️ Support", 
 		  contexts: ["browser_action"],
-		  onclick: this.goToReviews
+		  onclick: this.goToSupport
 		});
 		
+		//chrome.contextMenus.create({
+		//  title: "🌟 Leave a review", 
+		//  contexts: ["browser_action"],
+		//  onclick: this.goToReviews
+		//});
+		
 		chrome.contextMenus.create({
-		  title: "☕ Buy me a coffee", 
+		  title: "💳 Donate", 
 		  contexts: ["browser_action"],
 		  onclick: this.goToBuyMeACoffee
-		});		
+		});
 		
 		chrome.runtime.setUninstallURL("https://docs.google.com/forms/d/e/1FAIpQLSd5gELqtwb9rJQgdK7SRAA5--fZQxTXDLNBIU2pOteHg1Kuig/viewform");		
 		//For firefox: https://docs.google.com/forms/d/e/1FAIpQLSd5gELqtwb9rJQgdK7SRAA5--fZQxTXDLNBIU2pOteHg1Kuig/viewform

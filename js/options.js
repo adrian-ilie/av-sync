@@ -2,11 +2,13 @@ const delayInput = document.getElementById('delayInput');
 const delaySelectorElement = document.getElementById('delaySelector');
 const delayNumberElement = document.getElementById("delayNumber");
 const maxSelectableDelayElement = document.getElementById('maxSelectableDelay');
+const maxAcceptableDelayElement = document.getElementById('maxAcceptableDelay');
 const delayControlsInPlayerElement = document.getElementById('delayControlsInPlayerCheckbox');
 
 delayInput.addEventListener("input", processDelayInputChange);
 delaySelectorElement.addEventListener('change', processDelayChange);
 maxSelectableDelayElement.addEventListener("input", processMaxSelectableDelay);
+maxAcceptableDelayElement.addEventListener("input", processMaxAcceptableDelay);
 delayControlsInPlayerElement.addEventListener('change', processDelayControlsInPlayerChange);
 
 function restoreOptions() {
@@ -15,10 +17,12 @@ function restoreOptions() {
     chrome.storage.local.get({
 		delayValue: 0,
 		maxSelectableDelayValue: 5000,
+		maxAcceptableDelayValue: 25,
 		delayControlsInPlayerValue: true
     }, function (items) {
 		updateDelayElements(items.delayValue);
 		updateMaxSelectableDelayElement(items.maxSelectableDelayValue);
+		updateMaxAcceptableDelayElement(items.maxAcceptableDelayValue);
 		updateDelayControlsInPlayer(items.delayControlsInPlayerValue);
     });
 }
@@ -71,6 +75,19 @@ function processMaxSelectableDelay()
 	}	
 }
 
+function processMaxAcceptableDelay()
+{
+	var isValid = maxAcceptableDelayElement.checkValidity();
+	if(isValid)	
+	{	
+		chrome.runtime.sendMessage({"message" : "maxAcceptableDelayChange", "maxAcceptableDelayValue": maxAcceptableDelayElement.value});
+	}
+	else
+	{
+		maxAcceptableDelayElement.reportValidity();
+	}	
+}
+
 function processDelayControlsInPlayerChange()
 {
 	chrome.runtime.sendMessage({"message" : "delayControlsInPlayerChange", "delayControlsInPlayerValue": this.checked});
@@ -93,6 +110,12 @@ function updateMaxSelectableDelayElement(maxSelectableDelay)
 {
 	maxSelectableDelayElement.value = maxSelectableDelay;
 	processMaxSelectableDelay();
+}
+
+function updateMaxAcceptableDelayElement(maxAcceptableDelay)
+{
+	maxAcceptableDelayElement.value = maxAcceptableDelay;
+	processMaxAcceptableDelay();
 }
 
 function updateDelayControlsInPlayer(showDelayControlsInPlayer)
