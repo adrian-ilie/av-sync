@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head><title>YouTube Audio/Video Sync</title></head>
 <link rel="stylesheet" href="../css/bootstrap.css" >
 <link rel="stylesheet" href="../css/range-slider.css" >
@@ -7,7 +7,8 @@
 <div class="container">
 	<form class="bd-example">
 		<fieldset>
-			<h2><img src="../img/icon128.png" width="70" height="70"> YouTube Audio/Video Sync - Options</h2>
+			<legend>YouTube Audio/Video Sync - Options</legend>
+			<h2><img src="../img/icon128.png" alt="Logo" width="70" height="70"> YouTube Audio/Video Sync - Options</h2>
 			<br/>
 			<div class="form-group">
 				<label for="delaySelector"><strong>Audio Delay (ms)</strong></label>
@@ -35,7 +36,7 @@
 				<input type="number" class="form-control" id="maxAcceptableDelay" style="width: 200px;" value="8" min="8" max="125">
 				<small id="maxAcceptableDelayHelp" class="form-text text-muted">If your computer is struggling to sync, you can try increasing this value. The extension will try and sync the audio without going over this value in either direction.</small>
 			</div>
-			<br/>					
+			<br/>
 		</fieldset>
 	</form>
 </div>

@@ -1,5 +1,5 @@
 class Synchronizer
-{	
+{
 	constructor(delayValue, acceptablePrecisionInMs){
 		this.delayValue = delayValue;
 		this.acceptablePrecisionInMs = acceptablePrecisionInMs;
@@ -16,17 +16,17 @@ class Synchronizer
 		{
 			this.adjustment = 0.09;
 		}
-		
+
 		this.isMainLoopRunning = false;
 		this.mainLoopId = 0;
 	}
-	
+
 	startMainAdjustLagLoop()
 	{
 		this.startAdjustLagLoop(100);
 		this.isMainLoopRunning = true;
 	}
-	
+
 	startSecondaryAdjustLagLoop() //less frequent than main loop, currently only used for Chrome
 	{
 		this.startAdjustLagLoop(1000);
@@ -35,12 +35,12 @@ class Synchronizer
 	startAdjustLagLoop(interval)
 	{
 		this.clearMainAdjustLagLoop(this.mainLoopId);
-		this.mainLoopId = setInterval( 
-			function(){ 
-				synchronizer.adjustLag(); 
+		this.mainLoopId = setInterval(
+			function(){
+				synchronizer.adjustLag();
 			}, interval);
 	}
-	
+
 	clearSyncLoop()
 	{
 		clearInterval(this.mainLoopId);
@@ -55,10 +55,9 @@ class Synchronizer
 	adjustLag(){
 		const videoElement = this.getVideoElement();
 		const audioElement = this.getAudioElement();
-		const precisionElement = this.getPrecisionElement();
 		const unreliableSystemAcceptableDeviation = 5;
-		const playbackRate = videoElement.playbackRate;		
-					
+		const playbackRate = videoElement.playbackRate;
+
 		//Disable sync when switching to a live video.
 		var youTubeliveButton = getYouTubeLiveButtonElement();
 		if(youTubeliveButton !==  undefined)
@@ -69,15 +68,15 @@ class Synchronizer
 			removeDelayControls();
 			return;
 		}
-		
+
 		if(videoElement != undefined)
 		{
 			//remove audio sync element when video is gone
 			if(videoElement.src === "" && audioElement != undefined)
 			{
 				audioElement.parentNode.removeChild(audioElement);
-			}	
-		
+			}
+
 			if(audioElement != undefined && videoElement.currentTime != 0 &&
 			   audioElement.buffered.length > 0)
 			{
@@ -89,7 +88,7 @@ class Synchronizer
 				var videocurrentime = videoElement.currentTime;
 				var audioCurrentTime=  audioElement.currentTime;
 				var delay = videocurrentime + delayInSeconds - audioCurrentTime;
-				
+
 				//for debugginhg:
 				//console.log(delay);
 				var currentAcceptablePrecision = this.acceptablePrecisionInMs;
@@ -97,55 +96,55 @@ class Synchronizer
 				{
 					currentAcceptablePrecision *= playbackRate;
 				}
-				if((isReliableSystem() && Math.abs(delay) > currentAcceptablePrecision) || 
+				if((isReliableSystem() && Math.abs(delay) > currentAcceptablePrecision) ||
 				   (!isReliableSystem() && this.isMainLoopRunning && Math.abs(delay) > currentAcceptablePrecision) ||
 				   (!isReliableSystem() && Math.abs(delay) >= unreliableSystemAcceptableDeviation))
 				   //outside of the acceptable precision, keep trying
-				   //In chrome on Windows, we can adjust the sync as it goes, usually once in sync it will stay in sync, 
-				   //For other systems only retry if the delay is more than 5 seconds (this will cover also the skipping in youtube by pressing left/righ arrows.)			
-				{										
+				   //In chrome on Windows, we can adjust the sync as it goes, usually once in sync it will stay in sync,
+				   //For other systems only retry if the delay is more than 5 seconds (this will cover also the skipping in youtube by pressing left/righ arrows.)
+				{
 					audioElement.muted = true;
 					var currentAdjustment = this.adjustment;
-					
-					//if the previous difference was of a similar value, give it a kick so that it does'n get stuck					
+
+					//if the previous difference was of a similar value, give it a kick so that it does'n get stuck
 					if(Math.abs(delay) < currentAcceptablePrecision * 6.25)
 					{
 						currentAdjustment += delay * (Math.random() * 1.25 );
 					}
-					
+
 					if(playbackRate != undefined && playbackRate != null)
 					{
 						currentAdjustment *= playbackRate;
 					}
 
 					audioElement.currentTime += delay + currentAdjustment;
-					
+
 					if(this.isValidChromeRuntime)
 					{
 						chrome.runtime.sendMessage({message: "setWaitingBadge"});
 					}
-													
-					//the first time an unnacceptable deviation is detected from the secondary loop, start the main loop 
+
+					//the first time an unnacceptable deviation is detected from the secondary loop, start the main loop
 					if(!this.isMainLoopRunning)
 					{
 						this.startMainAdjustLagLoop();
 					}
-				}			
+				}
 				else
-				{										
+				{
 					//console.log("found delay: " + delay);
 					audioElement.muted = false;
-					
+
 					this.startSecondaryAdjustLagLoop();
 
 					if(!videoElement.paused) { audioElement.play(); }
-					
+
 					if(this.isValidChromeRuntime)
 					{
 						chrome.runtime.sendMessage({message: "removeWaitingBadge"});
 					}
 				}
-			}		
+			}
 		}
 	}
 }
@@ -193,15 +192,15 @@ function adjustVolumeForSyncByVideoElement(videoElement)
 	{
 		return;
 	}
-	
+
 	if(isVolumeForVideoAudible(videoElement)) //not yet adjusted
-	{				
+	{
 		videoElement.volume /= muteVolumeAdjustment;
-					
+
 		var leftVolumeBarValue = getCssProperty("ytp-volume-slider-handle", "left").match(/\d+/);
-					
+
 		const audioElement = window.document.getElementById(syncAudioElementName);
-		
+
 		if(audioElement != null)
 		{
 			if(leftVolumeBarValue == 0)
@@ -217,7 +216,7 @@ function adjustVolumeForSyncByVideoElement(videoElement)
 }
 
 function createSyncAudioElement(url)
-{	
+{
 	if(document.contains(document.getElementById(syncAudioElementName)))
 	{
 		document.getElementById(syncAudioElementName).remove();
@@ -229,7 +228,7 @@ function createSyncAudioElement(url)
 	syncAudioElement.autoplay = false;
 	syncAudioElement.muted = false;
 	syncAudioElement.preload = "auto";
-	
+
 	const videoElement = window.document.getElementsByTagName('video')[0];
 	if(!videoElement.paused) { syncAudioElement.play(); }
 
@@ -239,14 +238,14 @@ function createSyncAudioElement(url)
 function changeRateAudio(event){
 	const videoElement = event.target;
 	const audioElement = window.document.getElementById(syncAudioElementName);
-	
+
 	if(audioElement != undefined)
 	{
 		audioElement.playbackRate = videoElement.playbackRate;
 	}
 }
 
-function playSyncAudio(event){	
+function playSyncAudio(event){
 	const videoElement = event.target;
 
 	var youTubeliveButton = getYouTubeLiveButtonElement();
@@ -257,7 +256,7 @@ function playSyncAudio(event){
 	else
 	{
 		turnVolumeForVideoToInaudible(videoElement);
-				
+
 		const audioElement = window.document.getElementById(syncAudioElementName);
 		if(audioElement != undefined)
 		{
@@ -274,38 +273,38 @@ function playSyncAudio(event){
 function pauseSyncAudio(){
 	const audioElement = window.document.getElementById(syncAudioElementName);
 	audioElement.pause();
-	
+
 	if(isValidChromeRuntime())
 	{
 		chrome.runtime.sendMessage({message: "removeWaitingBadge"});
-	}	
+	}
 	if(synchronizer != undefined)
 	{
 		synchronizer.clearSyncLoop();
 	}
-};
+}
 
 function makeSetAudioURL(videoElement, url) {
-    function setAudioURL() {		
+    function setAudioURL() {
 		if (url === '' || videoElement.src === url) {
             return;
         }
-		
-		
+
+
 		if(synchronizer != undefined)
 		{
 			synchronizer.clearSyncLoop();
 		}
-		
+
 		turnVolumeForVideoToInaudible(videoElement); //is this needed?
-		
+
 		chrome.storage.local.get({delayValue: 0,
 								  maxSelectableDelayValue: 5000,
 								  delayControlsInPlayerValue: true,
 								  maxAcceptableDelayValue: 25}, (values) => {
-			
+
 			globalMaxSelectableDelayValue = values.maxSelectableDelayValue;
-			
+
 			if(values.delayControlsInPlayerValue)
 			{
 				if(synchronizer == undefined)
@@ -316,17 +315,17 @@ function makeSetAudioURL(videoElement, url) {
 				addDelayControls();
 				processPlayerDelayChange(values.delayValue);
 			}
-			
+
 		});
 
 
 
 		createSyncAudioElement(url);
-		
-		videoElement.addEventListener('volumechange', adjustVolumeForSync);		
-		videoElement.addEventListener('play', playSyncAudio);		
-		videoElement.addEventListener('pause', pauseSyncAudio);	
-		videoElement.addEventListener('ratechange', changeRateAudio);	
+
+		videoElement.addEventListener('volumechange', adjustVolumeForSync);
+		videoElement.addEventListener('play', playSyncAudio);
+		videoElement.addEventListener('pause', pauseSyncAudio);
+		videoElement.addEventListener('ratechange', changeRateAudio);
 		adjustVolumeForSyncByVideoElement(videoElement);
 	}
 
@@ -340,25 +339,25 @@ function addDelayControls()
 	{
 		return;
 	}
-	
+
 	const delayInPlayerElement = window.document.getElementById("delayInPlayer");
 	if(delayInPlayerElement === null)
 	{
 		const ytpTimeDurationElement = document.getElementsByClassName('ytp-time-duration')[0];
-		
-		ytpTimeDurationElement.insertAdjacentHTML('afterend', '<span id = "delayControls"> \
-				<span class="ytp-time-separator">&nbsp;&nbsp;&nbsp;</span> \
-				<button id = "decreaseDelayButton" style="width: 24px; border-radius: 50%; outline: none; box-shadow: none;">-</button> \
-				<input type="number" id="delayInPlayer" title = "Delay in milliseconds" style="color: white; background: transparent; border: none; text-align: right;" \
-					min="-' + parseInt(globalMaxSelectableDelayValue) + '" max="' + parseInt(globalMaxSelectableDelayValue) + '"> \
-				<span>ms</span> \
-				<button id = "increaseDelayButton" style="width: 24px; border-radius: 50%; outline: none; box-shadow: none;">+</button> \
-				<span id = "precision"></span> \
-				</span>');
+
+		ytpTimeDurationElement.insertAdjacentHTML('afterend', '<span id = "delayControls">' +
+				'<span class="ytp-time-separator">&nbsp;&nbsp;&nbsp;</span> ' +
+				'<button id = "decreaseDelayButton" style="width: 24px; border-radius: 50%; outline: none; box-shadow: none;">-</button> ' +
+				'<input type="number" id="delayInPlayer" title = "Delay in milliseconds" style="color: white; background: transparent; border: none; text-align: right;" ' +
+				'	min="-' + parseInt(globalMaxSelectableDelayValue) + '" max="' + parseInt(globalMaxSelectableDelayValue) + '"> ' +
+				'<span>ms</span> ' +
+				'<button id = "increaseDelayButton" style="width: 24px; border-radius: 50%; outline: none; box-shadow: none;">+</button> ' +
+				'<span id = "precision"></span> ' +
+				'</span>');
 
 		document.getElementById("delayInPlayer").addEventListener('keydown', processDelayInPlayerKeyDown, true);
 		document.getElementById("delayInPlayer").addEventListener('input', processDelayInPlayer);
-		
+
 		document.getElementById("increaseDelayButton").addEventListener('click', processDelayAdjustButtonClick, true);
 		document.getElementById("decreaseDelayButton").addEventListener('click', processDelayAdjustButtonClick, true);
 	}
@@ -378,12 +377,12 @@ function processDelayAdjustButtonClick(event)
 	if(this.id === "increaseDelayButton")
 	{
 		adjustment = 1;
-	}		
+	}
 	else if(this.id === "decreaseDelayButton")
 	{
 		adjustment = -1;
 	}
-	
+
 	const delayInPlayerElement = window.document.getElementById("delayInPlayer");
 	var adjustedValue = parseInt(delayInPlayerElement.value) + adjustment;
 
@@ -426,27 +425,27 @@ function processPlayerDelayChange(adjustedValue)
 	}
 }
 
-window.addEventListener('DOMContentLoaded', (event) => {	
+window.addEventListener('DOMContentLoaded', (event) => {
 	//needed for a smooth transition to the next video in a playlist.
 	if(synchronizer !== undefined)
 	{
 		synchronizer.clearSyncLoop();
 	}
-	
+
 	const videoElement = window.document.getElementsByTagName('video')[0];
-		
+
     if(videoElement != undefined && isValidChromeRuntime())
-	{		
+	{
 		var youTubeliveButton = getYouTubeLiveButtonElement();
 		if(youTubeliveButton !==  undefined)
 		{
 			removeDelayControls();
 		}
-		
+
 		chrome.runtime.sendMessage({message: "getCurrentTimeBeforeToggle"}, function(response) {
 			if(response != "notFound" && response.time > 0 && response.url === window.location.href)
 				{
-					videoElement.currentTime = response.time;	
+					videoElement.currentTime = response.time;
 
 					//it's now safe to clear this tab's storage.
 					chrome.runtime.sendMessage({message: "clearTabStorage"});
@@ -489,8 +488,8 @@ function getYouTubeLiveButtonElement()
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 	const videoElements = window.document.getElementsByTagName('video');
-	const videoElement = videoElements[0];		
-		
+	const videoElement = videoElements[0];
+
 	var youTubeliveButton = getYouTubeLiveButtonElement();
 	if(youTubeliveButton !==  undefined)
 	{
@@ -498,15 +497,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 	}
 	else if(request.url != undefined)
 	{
-		const url = request.url;		
-		
+		const url = request.url;
+
 		if (typeof videoElement == 'undefined') {
 			return;
 		}
-		
-		videoElement.onloadeddata = makeSetAudioURL(videoElement, url);			
+
+		videoElement.onloadeddata = makeSetAudioURL(videoElement, url);
 	}
-	
+
 	if(request.message === "delayChanged")
 	{
 		synchronizer.delayValue = request.delayValue;
@@ -515,17 +514,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 			processPlayerDelayChange(request.delayValue);
 		}
 	}
-	
+
 	if(request.message === "maxSelectableDelayChanged")
 	{
 		globalMaxSelectableDelayValue = request.maxSelectableDelayValue;
 	    if(document.getElementById("delayControls") != null)
 		{
 			window.document.getElementById("delayInPlayer").setAttribute("min", -globalMaxSelectableDelayValue);
-			window.document.getElementById("delayInPlayer").setAttribute("max", globalMaxSelectableDelayValue);		
+			window.document.getElementById("delayInPlayer").setAttribute("max", globalMaxSelectableDelayValue);
 		}
 	}
-	
+
 	if(request.message === "maxAcceptableDelayChanged")
 	{
 		var maxAcceptableDelayValue = request.maxAcceptableDelayValue;
@@ -534,7 +533,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 			synchronizer.acceptablePrecisionInMs = 	maxAcceptableDelayValue/1000;
 		}
 	}
-	
+
 	if(request.message === "delayControlsInPlayerChanged")
 	{
 		var showDelayControls = request.delayControlsInPlayerValue;
@@ -548,16 +547,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 			removeDelayControls();
 		}
 	}
-	
+
 	if(request.message === "getCurrentTime")
 	{
 		var currentTime = 0;
-		const videoElements = window.document.getElementsByTagName('video');
-		const videoElement = videoElements[0];
 		if (typeof videoElement != undefined) {
 			currentTime = videoElement.currentTime.toString().split(".")[0];
 		}
-			
+
 		sendResponse({ "currentTime": currentTime});
 	}
 });

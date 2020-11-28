@@ -54,8 +54,8 @@ function processDelayChange()
 function processMaxSelectableDelay()
 {
 	var isValid = maxSelectableDelayElement.checkValidity();
-	if(isValid)	
-	{	
+	if(isValid)
+	{
 		const sign = Math.sign(delaySelectorElement.value);
 		if(maxSelectableDelayElement.value < Math.abs(delaySelectorElement.value))
 		{
@@ -65,27 +65,27 @@ function processMaxSelectableDelay()
 		delaySelectorElement.setAttribute("max", maxSelectableDelayElement.value);
 		delayInput.setAttribute("min", -maxSelectableDelayElement.value);
 		delayInput.setAttribute("max", maxSelectableDelayElement.value);
-		
+
 		chrome.runtime.sendMessage({"message" : "processDelayChange", "delayValue": delaySelectorElement.value});
 		chrome.runtime.sendMessage({"message" : "maxSelectableDelayChange", "maxSelectableDelayValue": maxSelectableDelayElement.value});
 	}
 	else
 	{
 		maxSelectableDelayElement.reportValidity();
-	}	
+	}
 }
 
 function processMaxAcceptableDelay()
 {
 	var isValid = maxAcceptableDelayElement.checkValidity();
-	if(isValid)	
-	{	
+	if(isValid)
+	{
 		chrome.runtime.sendMessage({"message" : "maxAcceptableDelayChange", "maxAcceptableDelayValue": maxAcceptableDelayElement.value});
 	}
 	else
 	{
 		maxAcceptableDelayElement.reportValidity();
-	}	
+	}
 }
 
 function processDelayControlsInPlayerChange()
