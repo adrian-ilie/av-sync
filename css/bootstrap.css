@@ -85,7 +85,6 @@ p {
 
 abbr[title],
 abbr[data-original-title] {
-  text-decoration: underline;
   -webkit-text-decoration: underline dotted;
   text-decoration: underline dotted;
   cursor: help;
@@ -3736,7 +3735,7 @@ input[type="button"].btn-block {
 
 .input-group-lg > .custom-select,
 .input-group-sm > .custom-select {
-  #padding-right: 1.75rem;
+  padding-right: 1.75rem;
 }
 
 .input-group > .input-group-prepend > .btn,
@@ -10116,6 +10115,7 @@ a.text-dark:hover, a.text-dark:focus {
 
 .text-hide {
   font: 0/0 a;
+  font-family: inherit;
   color: transparent;
   text-shadow: none;
   background-color: transparent;
