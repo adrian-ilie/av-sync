@@ -65,7 +65,7 @@ class Synchronizer
 			pauseSyncAudio();
 			this.clearSyncLoop();
 			turnVolumeForVideoToAudible(videoElement);
-			removeDelayControls();
+			showLiveVideoMessage();
 			return;
 		}
 
@@ -193,14 +193,28 @@ function adjustVolumeForSyncByVideoElement(videoElement)
 		return;
 	}
 
+	const audioElement = window.document.getElementById(syncAudioElementName);
+	
+	var leftVolumeBarValue = getCssProperty("ytp-volume-slider-handle", "left").match(/\d+/);
+
 	if(isVolumeForVideoAudible(videoElement)) //not yet adjusted
 	{
 		videoElement.volume /= muteVolumeAdjustment;
 
-		var leftVolumeBarValue = getCssProperty("ytp-volume-slider-handle", "left").match(/\d+/);
-
-		const audioElement = window.document.getElementById(syncAudioElementName);
-
+		if(audioElement != null)
+		{
+			if(leftVolumeBarValue == 0)
+			{
+				audioElement.volume = 0;
+			}
+			else
+			{
+				audioElement.volume = videoElement.volume * muteVolumeAdjustment;
+			}
+		}
+	}
+	else
+	{
 		if(audioElement != null)
 		{
 			if(leftVolumeBarValue == 0)
@@ -289,7 +303,8 @@ function makeSetAudioURL(videoElement, url) {
 		if (url === '' || videoElement.src === url) {
             return;
         }
-
+		
+		addAvSyncControlls();
 
 		if(synchronizer != undefined)
 		{
@@ -300,25 +315,25 @@ function makeSetAudioURL(videoElement, url) {
 
 		chrome.storage.local.get({delayValue: 0,
 								  maxSelectableDelayValue: 5000,
-								  delayControlsInPlayerValue: true,
+								  is_extension_disabled: true,
 								  maxAcceptableDelayValue: 25}, (values) => {
 
 			globalMaxSelectableDelayValue = values.maxSelectableDelayValue;
 
-			if(values.delayControlsInPlayerValue)
+			addAvSyncButton();
+				
+			if(values.is_extension_disabled === false)
 			{
 				if(synchronizer == undefined)
 				{
 					synchronizer = new Synchronizer(values.delayValue, values.maxAcceptableDelayValue/1000);
 					synchronizer.startMainAdjustLagLoop();
 				}
-				addDelayControls();
+				
+				//addDelayControls();
 				processPlayerDelayChange(values.delayValue);
 			}
-
 		});
-
-
 
 		createSyncAudioElement(url);
 
@@ -330,6 +345,165 @@ function makeSetAudioURL(videoElement, url) {
 	}
 
     return setAudioURL;
+}
+
+function addAvSyncControlls(){
+			chrome.storage.local.get({ delayValue: 0,
+									   maxSelectableDelayValue: 5000,
+									   is_extension_disabled: false}, (values) => {
+				globalMaxSelectableDelayValue = values.maxSelectableDelayValue;
+				addAvSyncButton(values.delayValue, values.is_extension_disabled);
+				adjustMenuForLiveVideos();
+			});
+}
+
+function getAvSyncMenuHtml(isExtensionDisabled)
+{
+	return '<div class="ytp-popup ytp-settings-menu" data-layer="100" id="yt-av-sync-menu" style="width: 251px; height: 200px; display: none;">'+
+			'<div class="ytp-panel" style="min-width: 250px; width: 251px; height: 200px;">'+
+				'<div class="ytp-panel-menu" role="menu" style="height: 200px;">'+
+					
+					'<div class="ytp-menuitem" role="menuitemcheckbox" aria-checked="true" tabindex="0">'+
+						'<div class="ytp-menuitem-icon"></div>'+
+						'<div class="ytp-menuitem-label"></div>'+
+						'<div class="ytp-menuitem-content">'+
+							'<button id="yt-av-sync-menu-close-button" style="width: 20px; height: 20px; border: none; background-color: transparent; padding: 0; cursor:pointer; color: white; ">x</button>'+
+						'</div>'+
+					'</div>'+
+					
+					'<div class="ytp-menuitem" role="menuitemcheckbox" aria-checked="'+!(isExtensionDisabled)+'" tabindex="0">'+
+						'<div class="ytp-menuitem-icon"></div>'+
+						'<div class="ytp-menuitem-label">Audio/Video Sync</div>'+
+						'<div class="ytp-menuitem-content">'+
+							'<div class="ytp-menuitem-toggle-checkbox" id="toggleExtensionButton"></div>'+
+						'</div>'+
+					'</div>'+
+					
+					'<div class="ytp-menuitem" role="menuitemcheckbox" aria-checked="true" tabindex="0" id="liveVideoMessage" hidden>'+
+						'<div class="ytp-menuitem-icon"></div>'+
+						'<div class="ytp-menuitem-label">Not possible to adjust in Live videos!</div>'+
+						'<div class="ytp-menuitem-content">'+
+						'</div>'+
+					'</div>'+
+					
+					'<div class="ytp-menuitem" role="menuitemcheckbox" aria-checked="true" tabindex="0" id="delayMenuItem">'+
+						'<div class="ytp-menuitem-icon"></div>'+
+						'<div class="ytp-menuitem-label">'+
+						
+						'<span id = "delayControls">' +
+								'<button id = "decreaseDelayButton" style="width: 24px; border-radius: 50%; outline: none; box-shadow: none;">-</button> ' +
+								'<input type="number" id="delayInPlayer" title = "Delay in milliseconds" style="color: white; background: transparent; border: none; text-align: right;" ' +
+'	min="-' + parseInt(globalMaxSelectableDelayValue) + '" max="' + parseInt(globalMaxSelectableDelayValue) +  '"  '+ ' oninput="setCustomValidity(\'\'); checkValidity(); setCustomValidity(validity.valid ? \'\' :\'Restricted to +/-'+globalMaxSelectableDelayValue+'. If you need more, adjust Maximum Selectable Delay in the Options\');" > ' +
+								'<span>ms</span> ' +
+								'<button id = "increaseDelayButton" style="width: 24px; border-radius: 50%; outline: none; box-shadow: none;">+</button> ' +
+								'<span id = "precision"></span> ' +
+							'</span>'+
+						
+						'</div>'+
+						
+						'<div class="ytp-menuitem-content" id="delay-controls-menuitem">'+		
+
+							'<button id="saveDelay" title="Save as global delay" style="width: 20px; height: 20px; border: none; background-color: transparent; padding: 0; cursor:pointer; fill: #eee">'+
+								//save button
+								'<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"'+
+								'	 viewBox="0 0 469.336 469.336" xml:space="preserve">'+
+								'	<g>'+
+								'		<g>'+
+								'			<g>'+
+								'				<path d="M266.668,149.336h42.667c5.896,0,10.667-4.771,10.667-10.667V32.002c0-5.896-4.771-10.667-10.667-10.667h-42.667'+
+								'					c-5.896,0-10.667,4.771-10.667,10.667v106.667C256.001,144.565,260.772,149.336,266.668,149.336z"/>'+
+								'				<path d="M466.21,88.461L380.876,3.127c-3.042-3.052-7.646-3.969-11.625-2.313c-3.979,1.646-6.583,5.542-6.583,9.854v138.667'+
+								'					c0,23.531-19.146,42.667-42.667,42.667h-192c-23.521,0-42.667-19.135-42.667-42.667V10.669c0-5.896-4.771-10.667-10.667-10.667'+
+									'				h-32c-23.521,0-42.667,19.135-42.667,42.667v384c0,23.531,19.146,42.667,42.667,42.667h384c23.521,0,42.667-19.135,42.667-42.667'+
+									'				V96.002C469.335,93.169,468.21,90.461,466.21,88.461z M405.335,437.336c0,5.896-4.771,10.667-10.667,10.667h-320'+
+									'				c-5.896,0-10.667-4.771-10.667-10.667v-192c0-5.896,4.771-10.667,10.667-10.667h320c5.896,0,10.667,4.771,10.667,10.667V437.336z'+
+									'				"/>'+
+									'		</g>'+
+								'		</g>'+
+								'	</g>'+
+								'</svg>'+
+							'</button>'+
+						
+						'</div>'+
+					'</div>'+	
+			
+					'<div class="ytp-menuitem" role="menuitemcheckbox" aria-checked="true" tabindex="0">'+
+						'<div class="ytp-menuitem-icon"></div>'+
+						'<div class="ytp-menuitem-label"><a target="_blank" href="'+ chrome.extension.getURL("html/options.html") +'">More Options</a></div>'+
+						'<div class="ytp-menuitem-content">'+
+						'</div>'+
+					'</div>'+				
+				'</div>'+
+			'</div>'+
+		'</div>';
+}
+
+function getAvSyncButtonHtml()
+{
+	return '<button id="yt-av-sync" class="ytp-button" aria-haspopup="true" aria-owns="yt-av-sync" data-tooltip-target-id="yt-av-sync-button" aria-label="Audio/Video Sync" title="Audio/Video Sync"><svg style="-webkit-filter: invert(100%); /* safari 6.0 - 9.0 */ filter: invert(100%); margin-left: 10px;" height="100%" viewBox="0 0 192 192" width="50%" xmlns="http://www.w3.org/2000/svg"><path d="m56 80a56 56 0 1 0 56 56 56.063 56.063 0 0 0 -56-56zm28.116 62.86-40 24a8.075 8.075 0 0 1 -12.116-6.86v-48a8.075 8.075 0 0 1 12.116-6.86l40 24a8.077 8.077 0 0 1 0 13.72z"></path><path d="m96 65v16a16.019 16.019 0 0 1 16 16h16a32.036 32.036 0 0 0 -32-32z"></path><path d="m96 33v16a48.054 48.054 0 0 1 48 48h16a64.072 64.072 0 0 0 -64-64z"></path><path d="m96 1v16a80.091 80.091 0 0 1 80 80h16a96.108 96.108 0 0 0 -96-96z"></path></svg><button>';
+}
+
+function addAvSyncButton(delayValue, isExtensionDisabled){
+
+	const ytAvSyncElement = window.document.getElementById("yt-av-sync-menu");
+	if(ytAvSyncElement === null)
+	{
+		const ytpSettingsMenuElement = document.getElementsByClassName('ytp-settings-menu')[0];
+		ytpSettingsMenuElement.insertAdjacentHTML('afterend', getAvSyncMenuHtml(isExtensionDisabled));
+						
+		document.getElementById("delayInPlayer").addEventListener('keydown', processDelayInPlayerKeyDown, true);
+		document.getElementById("delayInPlayer").addEventListener('input', processDelayInPlayer);
+		document.getElementById("increaseDelayButton").addEventListener('click', processDelayAdjustButtonClick, true);
+		document.getElementById("decreaseDelayButton").addEventListener('click', processDelayAdjustButtonClick, true);		
+		document.getElementById("yt-av-sync-menu-close-button").addEventListener('click', toggleAvSyncMenu, true);
+		document.getElementById("toggleExtensionButton").addEventListener('click', toggleExtension, true);	
+		document.getElementById("saveDelay").addEventListener('click', saveDelayButtonClick, true);
+	
+		const ytpSettingsButtonElement = document.getElementsByClassName('ytp-settings-button')[0];
+		
+		var ytAvSyncIconUrl = chrome.runtime.getURL("img/white_icon19.png");
+		ytpSettingsButtonElement.insertAdjacentHTML('afterend', getAvSyncButtonHtml());
+	
+		var extraEmptyButton = document.getElementById("yt-av-sync").nextElementSibling;
+		
+		if(extraEmptyButton.innerHTML === '') //Extra element needs to be removed since it is breaking the layout.
+		{
+			extraEmptyButton.remove();
+		}
+		
+		document.getElementById("yt-av-sync").addEventListener('click', toggleAvSyncMenu, true);
+
+		processPlayerDelayChange(delayValue);		
+	}
+}
+
+function adjustMenuForLiveVideos()
+{
+	var youTubeliveButton = getYouTubeLiveButtonElement();
+	if(youTubeliveButton !==  undefined)
+	{
+		showLiveVideoMessage();
+	}
+	else
+	{
+		removeLiveVideoMessage();
+	}
+}
+
+function saveDelayButtonClick(event)
+{
+	var delayValue = document.getElementById("delayInPlayer").value;
+	
+	chrome.runtime.sendMessage({message: "processDelayChange", delayValue: delayValue}, function(response) {
+	});
+	document.getElementById("saveDelay").style.fill = "#90ee90";
+}
+
+function toggleExtension()
+{
+	chrome.runtime.sendMessage({message: "toggleExtension"}, function(response) {
+			
+	});
 }
 
 function addDelayControls()
@@ -363,16 +537,47 @@ function addDelayControls()
 	}
 }
 
-function removeDelayControls()
-{
-	if(document.getElementById("delayControls") != null)
+function toggleAvSyncMenu(event)
+{	
+	var ytAvSyncMenu = document.getElementById("yt-av-sync-menu");
+	if(ytAvSyncMenu.style.display === "none")
 	{
-		document.getElementById("delayControls").remove();
+		ytAvSyncMenu.style.display = "block";
+	}
+	else
+	{
+		ytAvSyncMenu.style.display = "none";
+	}
+}
+
+function removeLiveVideoMessage()
+{
+	let delayMenuItem = document.getElementById("delayMenuItem");
+	let liveVideoMessage = document.getElementById("liveVideoMessage");
+		
+	if(delayMenuItem != null)
+	{
+		delayMenuItem.hidden = false;
+		liveVideoMessage.hidden = true;
+	}
+}
+
+function showLiveVideoMessage()
+{
+	let delayMenuItem = document.getElementById("delayMenuItem");
+	let liveVideoMessage = document.getElementById("liveVideoMessage");
+		
+	if(delayMenuItem != null)
+	{
+		delayMenuItem.hidden = true;
+		liveVideoMessage.hidden = false;
 	}
 }
 
 function processDelayAdjustButtonClick(event)
 {
+	document.getElementById("saveDelay").style.fill = "#eee";
+
 	var adjustment = 0;
 	if(this.id === "increaseDelayButton")
 	{
@@ -397,6 +602,8 @@ function processDelayInPlayerKeyDown(event)
 
 function processDelayInPlayer(event)
 {
+	document.getElementById("saveDelay").style.fill = "#eee";
+
 	processPlayerDelayChange(this.value);
 }
 
@@ -426,7 +633,7 @@ function processPlayerDelayChange(adjustedValue)
 }
 
 window.addEventListener('DOMContentLoaded', (event) => {
-	//needed for a smooth transition to the next video in a playlist.
+	//needed for a smooth transition to the next video in a playlist.	
 	if(synchronizer !== undefined)
 	{
 		synchronizer.clearSyncLoop();
@@ -436,12 +643,9 @@ window.addEventListener('DOMContentLoaded', (event) => {
 
     if(videoElement != undefined && isValidChromeRuntime())
 	{
-		var youTubeliveButton = getYouTubeLiveButtonElement();
-		if(youTubeliveButton !==  undefined)
-		{
-			removeDelayControls();
-		}
-
+		addAvSyncControlls();
+				
+		
 		chrome.runtime.sendMessage({message: "getCurrentTimeBeforeToggle"}, function(response) {
 			if(response != "notFound" && response.time > 0 && response.url === window.location.href)
 				{
@@ -451,6 +655,21 @@ window.addEventListener('DOMContentLoaded', (event) => {
 					chrome.runtime.sendMessage({message: "clearTabStorage"});
 				}
 			});
+	}
+});
+
+//Youtube video changed
+window.addEventListener('yt-page-data-updated', function () {
+	if(synchronizer !== undefined)
+	{
+		synchronizer.clearSyncLoop();
+	}
+
+	const videoElement = window.document.getElementsByTagName('video')[0];
+
+    if(videoElement != undefined && isValidChromeRuntime())
+	{
+		addAvSyncControlls();
 	}
 });
 
@@ -504,6 +723,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 		}
 
 		videoElement.onloadeddata = makeSetAudioURL(videoElement, url);
+		window.addEventListener('yt-page-data-updated', makeSetAudioURL(videoElement, url));
 	}
 
 	if(request.message === "delayChanged")
@@ -531,20 +751,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 	    if(document.getElementById("delayControls") != null)
 		{
 			synchronizer.acceptablePrecisionInMs = 	maxAcceptableDelayValue/1000;
-		}
-	}
-
-	if(request.message === "delayControlsInPlayerChanged")
-	{
-		var showDelayControls = request.delayControlsInPlayerValue;
-		if(showDelayControls)
-		{
-			addDelayControls();
-			processPlayerDelayChange(synchronizer.delayValue);
-		}
-		else
-		{
-			removeDelayControls();
 		}
 	}
 

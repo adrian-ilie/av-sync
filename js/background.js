@@ -115,7 +115,33 @@ class Background {
 
 				this.enableExtension();
 				chrome.storage.local.set({ "delayValue": 0 });
-            }
+			}
+			else if(details.reason === "update")
+			{
+				this.toggleExtension();
+			}
+		}
+		
+		this.toggleExtension = () => {
+				chrome.storage.local.get('is_extension_disabled', (values) => {
+					let disabled = values.is_extension_disabled;
+					if (disabled) {
+						this.enableExtension();
+					}
+					else {
+						this.disableExtension();
+					}
+				});	
+		}
+	
+		this.processDelayChange = (delayValue) => {
+			chrome.storage.local.set({ "delayValue": delayValue });
+				chrome.tabs.query({}, function(tabs) {
+					var message = {"message": "delayChanged", "delayValue": delayValue};
+					for (var i=0; i<tabs.length; ++i) {
+						chrome.tabs.sendMessage(tabs[i].id, message);
+					}
+				});
 		}
 
         chrome.browserAction.onClicked.addListener(() => {
@@ -155,16 +181,9 @@ class Background {
 		{
 			if(request.message === "processDelayChange")
 			{
-				const delayValue = request.delayValue;
-				chrome.storage.local.set({ "delayValue": delayValue });
-				chrome.tabs.query({}, function(tabs) {
-					var message = {"message": "delayChanged", "delayValue": delayValue};
-					for (var i=0; i<tabs.length; ++i) {
-						chrome.tabs.sendMessage(tabs[i].id, message);
-					}
-				});
+				this.processDelayChange(request.delayValue);				
 			}
-
+			
 			if(request.message === "maxSelectableDelayChange")
 			{
 				const maxSelectableDelayValue = request.maxSelectableDelayValue;
@@ -183,19 +202,6 @@ class Background {
 				chrome.storage.local.set({ "maxAcceptableDelayValue": maxAcceptableDelayValue });
 				chrome.tabs.query({}, function(tabs) {
 					var message = {"message": "maxAcceptableDelayChanged", "maxAcceptableDelayValue": maxAcceptableDelayValue};
-					for (var i=0; i<tabs.length; ++i) {
-						chrome.tabs.sendMessage(tabs[i].id, message);
-					}
-				});
-			}
-
-			if(request.message === "delayControlsInPlayerChange")
-			{
-				const delayControlsInPlayerValue = request.delayControlsInPlayerValue;
-				chrome.storage.local.set({ "delayControlsInPlayerValue": delayControlsInPlayerValue });
-				chrome.tabs.query({}, function(tabs) {
-					var message = {"message": "delayControlsInPlayerChanged",
-								   "delayControlsInPlayerValue": delayControlsInPlayerValue};
 					for (var i=0; i<tabs.length; ++i) {
 						chrome.tabs.sendMessage(tabs[i].id, message);
 					}
@@ -228,6 +234,11 @@ class Background {
 			if(request.message === "removeWaitingBadge")
 			{
 				chrome.browserAction.setBadgeText({text: "", tabId: sender.tab.id});
+			}
+			
+			if(request.message === "toggleExtension")
+			{
+				this.toggleExtension();
 			}
 		};
 

@@ -3,13 +3,11 @@ const delaySelectorElement = document.getElementById('delaySelector');
 const delayNumberElement = document.getElementById("delayNumber");
 const maxSelectableDelayElement = document.getElementById('maxSelectableDelay');
 const maxAcceptableDelayElement = document.getElementById('maxAcceptableDelay');
-const delayControlsInPlayerElement = document.getElementById('delayControlsInPlayerCheckbox');
 
 delayInput.addEventListener("input", processDelayInputChange);
 delaySelectorElement.addEventListener('change', processDelayChange);
 maxSelectableDelayElement.addEventListener("input", processMaxSelectableDelay);
 maxAcceptableDelayElement.addEventListener("input", processMaxAcceptableDelay);
-delayControlsInPlayerElement.addEventListener('change', processDelayControlsInPlayerChange);
 
 function restoreOptions() {
 	document.getElementById("delaySelector").focus();
@@ -17,13 +15,11 @@ function restoreOptions() {
     chrome.storage.local.get({
 		delayValue: 0,
 		maxSelectableDelayValue: 5000,
-		maxAcceptableDelayValue: 25,
-		delayControlsInPlayerValue: true
+		maxAcceptableDelayValue: 25
     }, function (items) {
 		updateDelayElements(items.delayValue);
 		updateMaxSelectableDelayElement(items.maxSelectableDelayValue);
 		updateMaxAcceptableDelayElement(items.maxAcceptableDelayValue);
-		updateDelayControlsInPlayer(items.delayControlsInPlayerValue);
     });
 }
 
@@ -88,11 +84,6 @@ function processMaxAcceptableDelay()
 	}
 }
 
-function processDelayControlsInPlayerChange()
-{
-	chrome.runtime.sendMessage({"message" : "delayControlsInPlayerChange", "delayControlsInPlayerValue": this.checked});
-}
-
 function updateDelayElements(delayValue)
 {
 	delayInput.value = delayValue;
@@ -118,7 +109,9 @@ function updateMaxAcceptableDelayElement(maxAcceptableDelay)
 	processMaxAcceptableDelay();
 }
 
-function updateDelayControlsInPlayer(showDelayControlsInPlayer)
-{
-	delayControlsInPlayerElement.checked = showDelayControlsInPlayer;
-}
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+	if(request.message === "processDelayChange")
+	{
+		updateDelayElements(request.delayValue);
+	}
+});

@@ -32,5 +32,8 @@
       "run_at": "document_start"
     }
   ],
+  "web_accessible_resources": [
+    "html/options.html"
+  ],
   "options_page": "html/options.html"
 }
