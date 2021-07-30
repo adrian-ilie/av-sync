@@ -11,6 +11,7 @@
 			<legend>YouTube Audio/Video Sync - Options</legend>
 			<br/>
 			<div class="form-group">
+				<br/>				
 				<label for="delaySelector"><strong>Global Audio Delay (ms)</strong></label>
 				<input type="number" class="form-control" id="delayInput" style="width: 200px;" min="-5000" max="5000">
 				<div class="invalid-feedback">
@@ -21,10 +22,20 @@
 					<span class="range-slider__value" id="delayNumber">0</span>
 				</div>
 				<small id="delaySelectorHelp" class="form-text text-muted">Enter your delay in milliseconds or select it from the slider. Use <kbd>&#8592;</kbd> or <kbd>&#8594;</kbd> to fine tune.</small>
-				<br/>				
+				<br/>			
+				<br/>
+				<div class="form-check form-switch">
+				  <input class="form-check-input" type="checkbox" id="autoToggleAudioDevice">
+				  <label class="form-check-label" for="flexSwitchCheckDefault"><strong>Auto toggle sync when current audio device is connected</strong></label>
+				  <input class="form-control" type="text" id="audioDeviceLabel" value="" aria-label="readonly input example" readonly hidden>
+				</div>
+				<small id="delaySelectorHelp" class="form-text text-muted">For this feature, microphone permission is needed in order to access the output audio device.</small>
+				<br/>
+				<br/>
 				<label for="maxSelectableDelay"><strong>Maximum Selectable Delay (ms)</strong></label>
 				<input type="number" class="form-control" id="maxSelectableDelay" style="width: 200px;" value="5000" min="5000">
 				<small id="delaySelectorHelp" class="form-text text-muted">This setting allows you to increase the range of the slider. Only change this if your delay is higher than 5 seconds.</small>
+				<br/>
 				<br/>
 				<label for="maxAcceptableDelay"><strong>Maximum Acceptable Lip Sync (ms)</strong></label>
 				<input type="number" class="form-control" id="maxAcceptableDelay" style="width: 200px;" value="8" min="8" max="125">

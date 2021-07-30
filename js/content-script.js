@@ -355,10 +355,38 @@ function addAvSyncControlls(){
 				addAvSyncButton(values.delayValue, values.is_extension_disabled);
 				adjustMenuForLiveVideos();
 			});
+			addMediaDeviceManagerIframe();
+}
+
+function addMediaDeviceManagerIframe()
+{
+	var iframe = document.createElement("IFRAME");
+	iframe.setAttribute("src", chrome.extension.getURL("html/mediaDeviceManager.html"));
+	iframe.setAttribute("allow", "microphone");
+	iframe.hidden = true
+	document.body.appendChild(iframe);	 
 }
 
 function getAvSyncMenuHtml(isExtensionDisabled)
 {
+	const saveButtonSvg = '<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"'+
+								'	 viewBox="0 0 469.336 469.336" xml:space="preserve">'+
+								'	<g>'+
+								'		<g>'+
+								'			<g>'+
+								'				<path d="M266.668,149.336h42.667c5.896,0,10.667-4.771,10.667-10.667V32.002c0-5.896-4.771-10.667-10.667-10.667h-42.667'+
+								'					c-5.896,0-10.667,4.771-10.667,10.667v106.667C256.001,144.565,260.772,149.336,266.668,149.336z"/>'+
+								'				<path d="M466.21,88.461L380.876,3.127c-3.042-3.052-7.646-3.969-11.625-2.313c-3.979,1.646-6.583,5.542-6.583,9.854v138.667'+
+								'					c0,23.531-19.146,42.667-42.667,42.667h-192c-23.521,0-42.667-19.135-42.667-42.667V10.669c0-5.896-4.771-10.667-10.667-10.667'+
+									'				h-32c-23.521,0-42.667,19.135-42.667,42.667v384c0,23.531,19.146,42.667,42.667,42.667h384c23.521,0,42.667-19.135,42.667-42.667'+
+									'				V96.002C469.335,93.169,468.21,90.461,466.21,88.461z M405.335,437.336c0,5.896-4.771,10.667-10.667,10.667h-320'+
+									'				c-5.896,0-10.667-4.771-10.667-10.667v-192c0-5.896,4.771-10.667,10.667-10.667h320c5.896,0,10.667,4.771,10.667,10.667V437.336z'+
+									'				"/>'+
+									'		</g>'+
+								'		</g>'+
+								'	</g>'+
+								'</svg>';
+								
 	return '<div class="ytp-popup ytp-settings-menu" data-layer="100" id="yt-av-sync-menu" style="width: 251px; height: 200px; display: none;">'+
 			'<div class="ytp-panel" style="min-width: 250px; width: 251px; height: 200px;">'+
 				'<div class="ytp-panel-menu" role="menu" style="height: 200px;">'+
@@ -403,27 +431,10 @@ function getAvSyncMenuHtml(isExtensionDisabled)
 						
 						'<div class="ytp-menuitem-content" id="delay-controls-menuitem">'+		
 
-							'<button id="saveDelay" title="Save as global delay" style="width: 20px; height: 20px; border: none; background-color: transparent; padding: 0; cursor:pointer; fill: #eee">'+
+							'<button id="saveDelay" title="Save as global delay" style="width: 20px; height: 20px; border: none; background-color: transparent; padding: 0; margin: 5px; cursor:pointer; fill: #eee">'+
 								//save button
-								'<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"'+
-								'	 viewBox="0 0 469.336 469.336" xml:space="preserve">'+
-								'	<g>'+
-								'		<g>'+
-								'			<g>'+
-								'				<path d="M266.668,149.336h42.667c5.896,0,10.667-4.771,10.667-10.667V32.002c0-5.896-4.771-10.667-10.667-10.667h-42.667'+
-								'					c-5.896,0-10.667,4.771-10.667,10.667v106.667C256.001,144.565,260.772,149.336,266.668,149.336z"/>'+
-								'				<path d="M466.21,88.461L380.876,3.127c-3.042-3.052-7.646-3.969-11.625-2.313c-3.979,1.646-6.583,5.542-6.583,9.854v138.667'+
-								'					c0,23.531-19.146,42.667-42.667,42.667h-192c-23.521,0-42.667-19.135-42.667-42.667V10.669c0-5.896-4.771-10.667-10.667-10.667'+
-									'				h-32c-23.521,0-42.667,19.135-42.667,42.667v384c0,23.531,19.146,42.667,42.667,42.667h384c23.521,0,42.667-19.135,42.667-42.667'+
-									'				V96.002C469.335,93.169,468.21,90.461,466.21,88.461z M405.335,437.336c0,5.896-4.771,10.667-10.667,10.667h-320'+
-									'				c-5.896,0-10.667-4.771-10.667-10.667v-192c0-5.896,4.771-10.667,10.667-10.667h320c5.896,0,10.667,4.771,10.667,10.667V437.336z'+
-									'				"/>'+
-									'		</g>'+
-								'		</g>'+
-								'	</g>'+
-								'</svg>'+
+								saveButtonSvg +
 							'</button>'+
-						
 						'</div>'+
 					'</div>'+	
 			
@@ -632,7 +643,8 @@ function processPlayerDelayChange(adjustedValue)
 	}
 }
 
-window.addEventListener('DOMContentLoaded', (event) => {
+window.addEventListener('DOMContentLoaded', (event) => {		
+
 	//needed for a smooth transition to the next video in a playlist.	
 	if(synchronizer !== undefined)
 	{

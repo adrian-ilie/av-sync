@@ -133,6 +133,18 @@ class Background {
 					}
 				});	
 		}
+		
+		this.performAudioDeviceConnectedActions = (audioDevice) => 
+		{
+			chrome.storage.local.set({autoToggleAudioDevice : true, audioDevice : audioDevice});											
+								
+			chrome.storage.local.get('is_extension_disabled', (values) => {
+					let disabled = values.is_extension_disabled;
+					if (disabled) {
+						this.enableExtension();
+					}					
+				});				
+		}
 	
 		this.processDelayChange = (delayValue) => {
 			chrome.storage.local.set({ "delayValue": delayValue });
@@ -239,6 +251,21 @@ class Background {
 			if(request.message === "toggleExtension")
 			{
 				this.toggleExtension();
+			}
+			
+			if(request.message === "performAudioDeviceConnectedActions")
+			{
+				this.performAudioDeviceConnectedActions(request.audioDevice);
+			}
+			
+			if(request.message === "performAudioDeviceDisconnectedActions")
+			{
+				chrome.storage.local.get('is_extension_disabled', (values) => {
+					let disabled = values.is_extension_disabled;
+					if (!disabled) {
+						this.disableExtension();
+					}					
+				});	
 			}
 		};
 

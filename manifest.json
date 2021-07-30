@@ -1,6 +1,6 @@
 {
   "name": "YouTube Audio/Video Sync",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "manifest_version": 2,
   "description": "Fix wireless audio streaming delay for YouTube",
   "offline_enabled": true,
@@ -34,7 +34,8 @@
     }
   ],
   "web_accessible_resources": [
-    "html/options.html"
+    "html/options.html",
+	"html/mediaDeviceManager.html"
   ],
   "options_page": "html/options.html"
 }

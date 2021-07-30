@@ -3,11 +3,14 @@ const delaySelectorElement = document.getElementById('delaySelector');
 const delayNumberElement = document.getElementById("delayNumber");
 const maxSelectableDelayElement = document.getElementById('maxSelectableDelay');
 const maxAcceptableDelayElement = document.getElementById('maxAcceptableDelay');
+const autoToggleAudioDeviceElement = document.getElementById('autoToggleAudioDevice');
+const audioDeviceLabelElement = document.getElementById('audioDeviceLabel');
 
 delayInput.addEventListener("input", processDelayInputChange);
 delaySelectorElement.addEventListener('change', processDelayChange);
 maxSelectableDelayElement.addEventListener("input", processMaxSelectableDelay);
 maxAcceptableDelayElement.addEventListener("input", processMaxAcceptableDelay);
+autoToggleAudioDeviceElement.addEventListener("change", processAutoToggleAudioDevice);
 
 function restoreOptions() {
 	document.getElementById("delaySelector").focus();
@@ -15,11 +18,14 @@ function restoreOptions() {
     chrome.storage.local.get({
 		delayValue: 0,
 		maxSelectableDelayValue: 5000,
-		maxAcceptableDelayValue: 25
+		maxAcceptableDelayValue: 25,
+		autoToggleAudioDevice: false,
+		audioDevice: null
     }, function (items) {
 		updateDelayElements(items.delayValue);
 		updateMaxSelectableDelayElement(items.maxSelectableDelayValue);
 		updateMaxAcceptableDelayElement(items.maxAcceptableDelayValue);
+		restoreAutoToggleAudioDevice(items.autoToggleAudioDevice, items.audioDevice);		
     });
 }
 
@@ -84,6 +90,11 @@ function processMaxAcceptableDelay()
 	}
 }
 
+function processAutoToggleAudioDevice()
+{
+	updateAutoToggleAudioDevice(autoToggleAudioDeviceElement.checked)
+}
+
 function updateDelayElements(delayValue)
 {
 	delayInput.value = delayValue;
@@ -107,6 +118,86 @@ function updateMaxAcceptableDelayElement(maxAcceptableDelay)
 {
 	maxAcceptableDelayElement.value = maxAcceptableDelay;
 	processMaxAcceptableDelay();
+}
+
+function restoreAutoToggleAudioDevice(autoToggleAudioDevice, audioDevice)
+{	
+	autoToggleAudioDeviceElement.checked = autoToggleAudioDevice;
+	if(autoToggleAudioDevice && audioDevice !== null)
+	{
+		audioDeviceLabelElement.value = audioDevice.label;
+		audioDeviceLabelElement.hidden = false;
+		
+		navigator.mediaDevices.getUserMedia({audio: true, video: false})
+		.then(function(devices) {
+			audioDeviceLabelElement.value = audioDevice.label; //show already saved device
+			audioDeviceLabelElement.hidden = false;
+		})
+		.catch(function(err) {
+		  console.log(err);
+		  audioDeviceLabelElement.hidden = false;
+		  audioDeviceLabelElement.value = "Permission denied. You need to allow access to microphone in order to access the audio output device.";
+		  autoToggleAudioDeviceElement.checked = false;
+		  chrome.storage.local.set({autoToggleAudioDevice : false});
+		});
+
+		
+	}
+	else if(!autoToggleAudioDevice)
+	{
+		audioDeviceLabelElement.hidden = true;
+	}
+}
+
+function updateAutoToggleAudioDevice(autoToggleAudioDevice)
+{
+	if(autoToggleAudioDevice)
+	{
+		navigator.mediaDevices.getUserMedia({audio: true, video: false})
+		.then(function(stream) {
+			navigator.mediaDevices.enumerateDevices()
+				.then(function(devices) {
+					var defaultAudioDevice = getDefaultAudioDevice(devices);
+					audioDeviceLabelElement.value = defaultAudioDevice.label;
+				    audioDeviceLabelElement.hidden = false;
+					chrome.runtime.sendMessage({message: "performAudioDeviceConnectedActions", audioDevice: defaultAudioDevice});
+									
+				});
+		})
+		.catch(function(err) {
+		  console.log(err);
+		  audioDeviceLabelElement.hidden = false;
+		  audioDeviceLabelElement.value = "Permission denied. You need to allow access to microphone in order to access the audio output device.";
+		  autoToggleAudioDeviceElement.checked = false;
+		  chrome.storage.local.set({autoToggleAudioDevice : false});
+		});
+	}
+	else
+	{		
+		chrome.storage.local.set({autoToggleAudioDevice : false});
+		audioDeviceLabelElement.hidden = true;
+	}	
+}
+
+function getDefaultAudioDevice(devices)
+{	
+	var defaultAudioDevice;
+	devices.forEach(function(deviceForDefault) {
+		if(deviceForDefault.kind === 'audiooutput' && deviceForDefault.deviceId === 'default')
+		{
+			const defaultDeviceName = deviceForDefault.label.replace('Default - ', '');
+			
+			devices.forEach(function(device) {
+				if(device.kind === 'audiooutput' && device.label === defaultDeviceName)
+				{
+					defaultAudioDevice = device;
+					return;					
+				}
+			});
+		}
+	});
+	
+	return defaultAudioDevice;
 }
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
