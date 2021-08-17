@@ -5,12 +5,17 @@ const maxSelectableDelayElement = document.getElementById('maxSelectableDelay');
 const maxAcceptableDelayElement = document.getElementById('maxAcceptableDelay');
 const autoToggleAudioDeviceElement = document.getElementById('autoToggleAudioDevice');
 const audioDeviceLabelElement = document.getElementById('audioDeviceLabel');
+const testDelayButtonElement = document.getElementById('testDelayButton');
+const captureDelayButtonElement = document.getElementById('captureDelayButton');
+const countdownAudioElement = document.getElementById('countdownAudio');
 
 delayInput.addEventListener("input", processDelayInputChange);
 delaySelectorElement.addEventListener('change', processDelayChange);
 maxSelectableDelayElement.addEventListener("input", processMaxSelectableDelay);
 maxAcceptableDelayElement.addEventListener("input", processMaxAcceptableDelay);
 autoToggleAudioDeviceElement.addEventListener("change", processAutoToggleAudioDevice);
+testDelayButtonElement.addEventListener("mousedown", processTestDelay);
+captureDelayButtonElement.addEventListener("mousedown", captureTestDelay);
 
 function restoreOptions() {
 	document.getElementById("delaySelector").focus();
@@ -198,6 +203,20 @@ function getDefaultAudioDevice(devices)
 	});
 	
 	return defaultAudioDevice;
+}
+
+function processTestDelay() {
+	testDelayButtonElement.hidden = true;
+	captureDelayButtonElement.hidden = false;
+	countdownAudio.currentTime = 0;
+	countdownAudio.play();
+}
+
+function captureTestDelay() {
+	testDelayButtonElement.hidden = false;
+	captureDelayButtonElement.hidden = true;
+	delayInput.value = Math.round(countdownAudioElement.currentTime * 1000) - 3000;
+	processDelayInputChange();
 }
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {

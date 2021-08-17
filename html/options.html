@@ -11,6 +11,16 @@
 			<legend>YouTube Audio/Video Sync - Options</legend>
 			<br/>
 			<div class="form-group">
+				<br/>
+				<button type="button" id="testDelayButton" class="btn btn-outline-primary">Find your system's delay</button>
+				<button type="button" id="captureDelayButton" class="btn btn-primary" hidden>Click when you hear the 4th beep</button>
+				<br/>
+				<small class="form-text text-muted">Try to determine the delay of your system by clicking when you hear the 4th beep. The value can be adjusted afterwards below.</small>
+				<audio id="countdownAudio">
+					<source src="../media/countdown.wav" type="audio/wav">
+					Your browser does not support the audio element.
+				</audio>
+				<br/>
 				<br/>				
 				<label for="delaySelector"><strong>Global Audio Delay (ms)</strong></label>
 				<input type="number" class="form-control" id="delayInput" style="width: 200px;" min="-5000" max="5000">
