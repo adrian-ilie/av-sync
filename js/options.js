@@ -165,8 +165,7 @@ function updateAutoToggleAudioDevice(autoToggleAudioDevice)
 					var defaultAudioDevice = getDefaultAudioDevice(devices);
 					audioDeviceLabelElement.value = defaultAudioDevice.label;
 				    audioDeviceLabelElement.hidden = false;
-					chrome.runtime.sendMessage({message: "performAudioDeviceConnectedActions", audioDevice: defaultAudioDevice});
-									
+					chrome.runtime.sendMessage({message: "performAudioDeviceConnectedActions", audioDevice: defaultAudioDevice});									
 				});
 		})
 		.catch(function(err) {
@@ -181,6 +180,7 @@ function updateAutoToggleAudioDevice(autoToggleAudioDevice)
 	{		
 		chrome.storage.local.set({autoToggleAudioDevice : false});
 		audioDeviceLabelElement.hidden = true;
+		chrome.runtime.sendMessage({message: "performAudioDeviceDisconnectedActions"});									
 	}	
 }
 
