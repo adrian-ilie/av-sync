@@ -117,8 +117,9 @@ class Background {
 				chrome.storage.local.set({ "delayValue": 0 });
 			}
 			else if(details.reason === "update")
-			{
-				this.toggleExtension();
+			{								
+				this.toggleExtensionBasedOnStoredValue();
+				
 			}
 		}
 		
@@ -130,6 +131,18 @@ class Background {
 					}
 					else {
 						this.disableExtension();
+					}
+				});	
+		}
+		
+		this.toggleExtensionBasedOnStoredValue = () => {
+				chrome.storage.local.get('is_extension_disabled', (values) => {
+					let disabled = values.is_extension_disabled;
+					if (disabled) {
+						this.disableExtension();
+					}
+					else {
+						this.enableExtension();
 					}
 				});	
 		}
