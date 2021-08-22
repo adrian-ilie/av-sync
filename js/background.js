@@ -114,13 +114,29 @@ class Background {
 				chrome.tabs.create({url: optionsUrl});
 
 				this.enableExtension();
-				chrome.storage.local.set({ "delayValue": 0 });
+				chrome.storage.local.set({ "syncValue": 0 });
 			}
 			else if(details.reason === "update")
 			{								
+				
+				this.migrateToReversedSignSyncValue();
 				this.toggleExtensionBasedOnStoredValue();
 				
 			}
+		}
+		
+		this.migrateToReversedSignSyncValue = () => {
+			chrome.storage.local.get(['syncValue', 'delayValue'], (values) => {
+					let delayValue = values.delayValue;
+					let syncValue = values.syncValue;
+					if(syncValue === undefined)
+					{
+						if(delayValue !== undefined)
+						{
+							this.processSyncChange(delayValue * -1);
+						}
+					}
+				});
 		}
 		
 		this.toggleExtension = () => {
@@ -133,7 +149,7 @@ class Background {
 						this.disableExtension();
 					}
 				});	
-		}
+		}	
 		
 		this.toggleExtensionBasedOnStoredValue = () => {
 				chrome.storage.local.get('is_extension_disabled', (values) => {
@@ -158,11 +174,11 @@ class Background {
 					}					
 				});				
 		}
-	
-		this.processDelayChange = (delayValue) => {
-			chrome.storage.local.set({ "delayValue": delayValue });
+
+		this.processSyncChange = (syncValue) => {
+			chrome.storage.local.set({ "syncValue": syncValue });
 				chrome.tabs.query({}, function(tabs) {
-					var message = {"message": "delayChanged", "delayValue": delayValue};
+					var message = {"message": "syncChanged", "syncValue": syncValue};
 					for (var i=0; i<tabs.length; ++i) {
 						chrome.tabs.sendMessage(tabs[i].id, message);
 					}
@@ -204,9 +220,9 @@ class Background {
 
 		this.processMessage = (request, sender, sendResponse) =>
 		{
-			if(request.message === "processDelayChange")
+			if(request.message === "processSyncChange")
 			{
-				this.processDelayChange(request.delayValue);				
+				this.processSyncChange(request.syncValue);				
 			}
 			
 			if(request.message === "maxSelectableDelayChange")

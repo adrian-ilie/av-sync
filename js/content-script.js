@@ -1,7 +1,7 @@
 class Synchronizer
 {
-	constructor(delayValue, acceptablePrecisionInMs){
-		this.delayValue = delayValue;
+	constructor(syncValue, acceptablePrecisionInMs){
+		this.syncValue = syncValue;
 		this.acceptablePrecisionInMs = acceptablePrecisionInMs;
 		this.getVideoElement = () => { return window.document.getElementsByTagName('video')[0] };
 		this.getAudioElement = () => { return window.document.getElementById('syncAudio') };
@@ -80,7 +80,7 @@ class Synchronizer
 			if(audioElement != undefined && videoElement.currentTime != 0 &&
 			   audioElement.buffered.length > 0)
 			{
-				var delayInSeconds = (this.delayValue/1000);
+				var delayInSeconds = (this.syncValue/1000)*(-1);
 
 				if(playbackRate != undefined && playbackRate != null)
 				{
@@ -315,7 +315,7 @@ function makeSetAudioURL(videoElement, url) {
 
 		turnVolumeForVideoToInaudible(videoElement); //is this needed?
 
-		chrome.storage.local.get({delayValue: 0,
+		chrome.storage.local.get({syncValue: 0,
 								  maxSelectableDelayValue: 5000,
 								  is_extension_disabled: true,
 								  maxAcceptableDelayValue: 25}, (values) => {
@@ -328,12 +328,12 @@ function makeSetAudioURL(videoElement, url) {
 			{
 				if(synchronizer == undefined)
 				{
-					synchronizer = new Synchronizer(values.delayValue, values.maxAcceptableDelayValue/1000);
+					synchronizer = new Synchronizer(values.syncValue, values.maxAcceptableDelayValue/1000);
 					synchronizer.startMainAdjustLagLoop();
 				}
 				
 				//addDelayControls();
-				processPlayerDelayChange(values.delayValue);
+				processPlayerDelayChange(values.syncValue);
 			}
 		});
 
@@ -350,11 +350,11 @@ function makeSetAudioURL(videoElement, url) {
 }
 
 function addAvSyncControlls(){
-			chrome.storage.local.get({ delayValue: 0,
+			chrome.storage.local.get({ syncValue: 0,
 									   maxSelectableDelayValue: 5000,
 									   is_extension_disabled: false}, (values) => {
 				globalMaxSelectableDelayValue = values.maxSelectableDelayValue;
-				addAvSyncButton(values.delayValue, values.is_extension_disabled);
+				addAvSyncButton(values.syncValue, values.is_extension_disabled);
 				adjustMenuForLiveVideos();
 			});
 			addMediaDeviceManagerIframe();
@@ -456,7 +456,7 @@ function getAvSyncButtonHtml()
 	return '<button id="yt-av-sync" class="ytp-button" aria-haspopup="true" aria-owns="yt-av-sync" data-tooltip-target-id="yt-av-sync-button" aria-label="Audio/Video Sync" title="Audio/Video Sync"><svg style="-webkit-filter: invert(100%); /* safari 6.0 - 9.0 */ filter: invert(100%); margin-left: 10px;" height="100%" viewBox="0 0 192 192" width="50%" xmlns="http://www.w3.org/2000/svg"><path d="m56 80a56 56 0 1 0 56 56 56.063 56.063 0 0 0 -56-56zm28.116 62.86-40 24a8.075 8.075 0 0 1 -12.116-6.86v-48a8.075 8.075 0 0 1 12.116-6.86l40 24a8.077 8.077 0 0 1 0 13.72z"></path><path d="m96 65v16a16.019 16.019 0 0 1 16 16h16a32.036 32.036 0 0 0 -32-32z"></path><path d="m96 33v16a48.054 48.054 0 0 1 48 48h16a64.072 64.072 0 0 0 -64-64z"></path><path d="m96 1v16a80.091 80.091 0 0 1 80 80h16a96.108 96.108 0 0 0 -96-96z"></path></svg><button>';
 }
 
-function addAvSyncButton(delayValue, isExtensionDisabled){
+function addAvSyncButton(syncValue, isExtensionDisabled){
 
 	const ytAvSyncElement = window.document.getElementById("yt-av-sync-menu");
 	if(ytAvSyncElement === null)
@@ -486,7 +486,7 @@ function addAvSyncButton(delayValue, isExtensionDisabled){
 		
 		document.getElementById("yt-av-sync").addEventListener('click', toggleAvSyncMenu, true);
 
-		processPlayerDelayChange(delayValue);		
+		processPlayerDelayChange(syncValue);		
 	}
 }
 
@@ -505,9 +505,9 @@ function adjustMenuForLiveVideos()
 
 function saveDelayButtonClick(event)
 {
-	var delayValue = document.getElementById("delayInPlayer").value;
+	var syncValue = document.getElementById("delayInPlayer").value;
 	
-	chrome.runtime.sendMessage({message: "processDelayChange", delayValue: delayValue}, function(response) {
+	chrome.runtime.sendMessage({message: "processSyncChange", syncValue: syncValue}, function(response) {
 	});
 	document.getElementById("saveDelay").style.fill = "#90ee90";
 }
@@ -631,18 +631,42 @@ function processPlayerDelayChange(adjustedValue)
 	delayInPlayerElement.value = adjustedValue;
 	delayInPlayerElement.style.width = ((delayInPlayerElement.value.length) * 8) + 'px';
 
-	if (delayInPlayerElement.checkValidity() && synchronizer != undefined)
+	if (delayInPlayerElement.checkValidity())
 	{
 		if(adjustedValue != undefined)
-		{
-			synchronizer.delayValue = adjustedValue;
+		{	
+			updateDelayInPlayerTitle(adjustedValue);
 		}
-		synchronizer.startMainAdjustLagLoop();
+		
+		if(synchronizer != undefined)
+		{
+			if(adjustedValue != undefined)
+			{			
+				synchronizer.syncValue = adjustedValue;				
+			}
+			synchronizer.startMainAdjustLagLoop();
+		}
 	}
 	else
 	{
 		delayInPlayerElement.reportValidity();
 	}
+}
+
+function updateDelayInPlayerTitle(value){
+	const delayInPlayerElement = window.document.getElementById("delayInPlayer");
+	if(value < 0)
+	{ 
+		delayInPlayerElement.title = "Audio will be hastened";
+	}
+	else if(value > 0)
+	{
+		delayInPlayerElement.title = "Audio will be delayed";
+	}
+	else 
+	{
+		delayInPlayerElement.title = "No sync";
+	}	
 }
 
 window.addEventListener('DOMContentLoaded', (event) => {		
@@ -740,12 +764,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 		window.addEventListener('yt-page-data-updated', makeSetAudioURL(videoElement, url));
 	}
 
-	if(request.message === "delayChanged")
+	if(request.message === "syncChanged")
 	{
-		synchronizer.delayValue = request.delayValue;
+		synchronizer.syncValue = request.syncValue;
 		if(document.getElementById("delayControls") != null)
 		{
-			processPlayerDelayChange(request.delayValue);
+			processPlayerDelayChange(request.syncValue);
 		}
 	}
 

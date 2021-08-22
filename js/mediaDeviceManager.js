@@ -1,35 +1,38 @@
-document.addEventListener('DOMContentLoaded', contedLoadedActions);
-function contedLoadedActions() {
+document.addEventListener('DOMContentLoaded', contentLoadedActions);
+function contentLoadedActions() {
 	navigator.mediaDevices.ondevicechange = function(event) {
 		processMediaDevices();
 	}
 }
 
 function processMediaDevices() {
-	chrome.storage.local.get({autoToggleAudioDevice: false} , function (items) {	
-
-	if(items.autoToggleAudioDevice === true)
+	if(isValidChromeRuntime())
 	{
-		navigator.mediaDevices.enumerateDevices()
-		.then(function(devices) {		  
-			chrome.storage.local.get({audioDevice: {}}, 
-				(values) => {								
-								const currentDefaultAudioDevice = getDefaultAudioDevice(devices);
-								
-								if(currentDefaultAudioDevice !== null && 
-									currentDefaultAudioDevice !== undefined &&
-									currentDefaultAudioDevice.deviceId === values.audioDevice.deviceId)
-								{
-									chrome.runtime.sendMessage({message: "performAudioDeviceConnectedActions", audioDevice: currentDefaultAudioDevice});
-								}
-								else
-								{
-									chrome.runtime.sendMessage({message: "performAudioDeviceDisconnectedActions"});
-								}							
-							});
-		});
+		chrome.storage.local.get({autoToggleAudioDevice: false} , function (items) {	
+
+		if(items.autoToggleAudioDevice === true)
+		{
+			navigator.mediaDevices.enumerateDevices()
+			.then(function(devices) {		  
+				chrome.storage.local.get({audioDevice: {}}, 
+					(values) => {								
+									const currentDefaultAudioDevice = getDefaultAudioDevice(devices);
+									
+									if(currentDefaultAudioDevice !== null && 
+										currentDefaultAudioDevice !== undefined &&
+										currentDefaultAudioDevice.deviceId === values.audioDevice.deviceId)
+									{
+										chrome.runtime.sendMessage({message: "performAudioDeviceConnectedActions", audioDevice: currentDefaultAudioDevice});
+									}
+									else
+									{
+										chrome.runtime.sendMessage({message: "performAudioDeviceDisconnectedActions"});
+									}							
+								});
+			});
+		}
+	  });
 	}
-  });
 }
 
 function getDefaultAudioDevice(devices)
@@ -51,4 +54,15 @@ function getDefaultAudioDevice(devices)
 	});
 	
 	return defaultAudioDevice;
+}
+
+function isValidChromeRuntime() {
+	try
+	{
+		return chrome.runtime && !!chrome.runtime.getManifest();
+	}
+	catch(error)
+	{
+		return false;
+	}
 }

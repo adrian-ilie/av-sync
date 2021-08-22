@@ -23,7 +23,10 @@
 				<br/>
 				<br/>				
 				<label for="delaySelector"><strong>Global Audio Delay (ms)</strong></label>
-				<input type="number" class="form-control" id="delayInput" style="width: 200px;" min="-5000" max="5000">
+				<div class="input-group mb-3" style="width: 400px;">
+					<input type="number" class="form-control" id="delayInput" min="-5000" max="5000">
+					<span class="input-group-text" id="delayInputDescription">(No sync)</span>			
+				</div>
 				<div class="invalid-feedback">
 				  Please chose a valid number in milliseconds between -5000 and 5000. If you need more, increase Maximum Selectable Delay (ms).
 				</div>

@@ -1,4 +1,5 @@
 const delayInput = document.getElementById('delayInput');
+const delayInputDescription = document.getElementById('delayInputDescription');
 const delaySelectorElement = document.getElementById('delaySelector');
 const delayNumberElement = document.getElementById("delayNumber");
 const maxSelectableDelayElement = document.getElementById('maxSelectableDelay');
@@ -10,7 +11,7 @@ const captureDelayButtonElement = document.getElementById('captureDelayButton');
 const countdownAudioElement = document.getElementById('countdownAudio');
 
 delayInput.addEventListener("input", processDelayInputChange);
-delaySelectorElement.addEventListener('change', processDelayChange);
+delaySelectorElement.addEventListener('change', processSyncChange);
 maxSelectableDelayElement.addEventListener("input", processMaxSelectableDelay);
 maxAcceptableDelayElement.addEventListener("input", processMaxAcceptableDelay);
 autoToggleAudioDeviceElement.addEventListener("change", processAutoToggleAudioDevice);
@@ -21,13 +22,13 @@ function restoreOptions() {
 	document.getElementById("delaySelector").focus();
 
     chrome.storage.local.get({
-		delayValue: 0,
+		syncValue: 0,
 		maxSelectableDelayValue: 5000,
 		maxAcceptableDelayValue: 25,
 		autoToggleAudioDevice: false,
 		audioDevice: null
     }, function (items) {
-		updateDelayElements(items.delayValue);
+		updateDelayElements(items.syncValue);
 		updateMaxSelectableDelayElement(items.maxSelectableDelayValue);
 		updateMaxAcceptableDelayElement(items.maxAcceptableDelayValue);
 		restoreAutoToggleAudioDevice(items.autoToggleAudioDevice, items.audioDevice);		
@@ -43,7 +44,8 @@ function processDelayInputChange()
 	{
 		delaySelectorElement.value = delayInput.value;
 		updateDelaySeletorTooltip(delayInput.value);
-		chrome.runtime.sendMessage({"message" : "processDelayChange", "delayValue": delayInput.value});
+		updateDelayInputDescription(delayInput.value);		
+		chrome.runtime.sendMessage({"message" : "processSyncChange", "syncValue": delayInput.value});
 	}
 	else
 	{
@@ -51,11 +53,28 @@ function processDelayInputChange()
 	}
 }
 
-function processDelayChange()
+function processSyncChange()
 {
 	delayInput.value = delaySelectorElement.value;
 	updateDelaySeletorTooltip(delaySelectorElement.value);
-	chrome.runtime.sendMessage({"message" : "processDelayChange", "delayValue": delaySelectorElement.value});
+	updateDelayInputDescription(delaySelectorElement.value);
+	chrome.runtime.sendMessage({"message" : "processSyncChange", "syncValue": delaySelectorElement.value});
+}
+
+function updateDelayInputDescription(value)
+{
+	if(value < 0)
+		{ 
+			delayInputDescription.innerHTML = "(Audio will be hastened)";
+		}
+	else if(value > 0)
+		{
+			delayInputDescription.innerHTML = "(Audio will be delayed)";
+		}
+	else 
+		{
+			delayInputDescription.innerHTML = "(No sync)";
+		}
 }
 
 function processMaxSelectableDelay()
@@ -73,7 +92,7 @@ function processMaxSelectableDelay()
 		delayInput.setAttribute("min", -maxSelectableDelayElement.value);
 		delayInput.setAttribute("max", maxSelectableDelayElement.value);
 
-		chrome.runtime.sendMessage({"message" : "processDelayChange", "delayValue": delaySelectorElement.value});
+		chrome.runtime.sendMessage({"message" : "processSyncChange", "syncValue": delaySelectorElement.value});
 		chrome.runtime.sendMessage({"message" : "maxSelectableDelayChange", "maxSelectableDelayValue": maxSelectableDelayElement.value});
 	}
 	else
@@ -100,17 +119,18 @@ function processAutoToggleAudioDevice()
 	updateAutoToggleAudioDevice(autoToggleAudioDeviceElement.checked)
 }
 
-function updateDelayElements(delayValue)
+function updateDelayElements(syncValue)
 {
-	delayInput.value = delayValue;
-	delaySelectorElement.value = delayValue;
-	updateDelaySeletorTooltip(delayValue);
+	delayInput.value = syncValue;
+	delaySelectorElement.value = syncValue;
+	updateDelaySeletorTooltip(syncValue);
+	updateDelayInputDescription(syncValue);
 }
 
-function updateDelaySeletorTooltip(delayValue)
+function updateDelaySeletorTooltip(syncValue)
 {
-	var delayValueInSeconds = (delayValue / 1000);
-	delayNumberElement.textContent = delayValueInSeconds +' s';
+	var syncValueInSeconds = (syncValue / 1000);
+	delayNumberElement.textContent = syncValueInSeconds +' s';
 }
 
 function updateMaxSelectableDelayElement(maxSelectableDelay)
@@ -215,13 +235,13 @@ function processTestDelay() {
 function captureTestDelay() {
 	testDelayButtonElement.hidden = false;
 	captureDelayButtonElement.hidden = true;
-	delayInput.value = Math.round(countdownAudioElement.currentTime * 1000) - 3000;
+	delayInput.value = (Math.round(countdownAudioElement.currentTime * 1000) - 3000) * (-1);
 	processDelayInputChange();
 }
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-	if(request.message === "processDelayChange")
+	if(request.message === "processSyncChange")
 	{
-		updateDelayElements(request.delayValue);
+		updateDelayElements(request.syncValue);
 	}
 });
