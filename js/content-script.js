@@ -80,11 +80,13 @@ class Synchronizer
 			if(audioElement != undefined && videoElement.currentTime != 0 &&
 			   audioElement.buffered.length > 0)
 			{
+				var delayInSeconds = (this.delayValue/1000);
+
 				if(playbackRate != undefined && playbackRate != null)
 				{
 					audioElement.playbackRate = playbackRate;
+					delayInSeconds *= playbackRate;
 				}
-				var delayInSeconds = (this.delayValue/1000);
 				var videocurrentime = videoElement.currentTime;
 				var audioCurrentTime=  audioElement.currentTime;
 				var delay = videocurrentime + delayInSeconds - audioCurrentTime;
@@ -104,13 +106,13 @@ class Synchronizer
 				   //For other systems only retry if the delay is more than 5 seconds (this will cover also the skipping in youtube by pressing left/righ arrows.)
 				{
 					audioElement.muted = true;
-					var currentAdjustment = this.adjustment;
-
+					var currentAdjustment = this.adjustment;				
+					
 					//if the previous difference was of a similar value, give it a kick so that it does'n get stuck
 					if(Math.abs(delay) < currentAcceptablePrecision * 6.25)
 					{
 						currentAdjustment += delay * (Math.random() * 1.25 );
-					}
+					}	
 
 					if(playbackRate != undefined && playbackRate != null)
 					{
@@ -118,7 +120,7 @@ class Synchronizer
 					}
 
 					audioElement.currentTime += delay + currentAdjustment;
-
+					
 					if(this.isValidChromeRuntime)
 					{
 						chrome.runtime.sendMessage({message: "setWaitingBadge"});
