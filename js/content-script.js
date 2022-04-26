@@ -248,7 +248,7 @@ function createSyncAudioElement(url)
 	const videoElement = window.document.getElementsByTagName('video')[0];
 	if(!videoElement.paused) { syncAudioElement.play(); }
 
-	document.getElementById('player').appendChild(syncAudioElement);
+  document.body.append(syncAudioElement)
 }
 
 function changeRateAudio(event){
