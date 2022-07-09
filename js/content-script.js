@@ -106,13 +106,13 @@ class Synchronizer
 				   //For other systems only retry if the delay is more than 5 seconds (this will cover also the skipping in youtube by pressing left/righ arrows.)
 				{
 					audioElement.muted = true;
-					var currentAdjustment = this.adjustment;				
-					
+					var currentAdjustment = this.adjustment;
+
 					//if the previous difference was of a similar value, give it a kick so that it does'n get stuck
 					if(Math.abs(delay) < currentAcceptablePrecision * 6.25)
 					{
 						currentAdjustment += delay * (Math.random() * 1.25 );
-					}	
+					}
 
 					if(playbackRate != undefined && playbackRate != null)
 					{
@@ -120,7 +120,7 @@ class Synchronizer
 					}
 
 					audioElement.currentTime += delay + currentAdjustment;
-					
+
 					if(this.isValidChromeRuntime)
 					{
 						chrome.runtime.sendMessage({message: "setWaitingBadge"});
@@ -196,7 +196,7 @@ function adjustVolumeForSyncByVideoElement(videoElement)
 	}
 
 	const audioElement = window.document.getElementById(syncAudioElementName);
-	
+
 	var leftVolumeBarValue = getCssProperty("ytp-volume-slider-handle", "left").match(/\d+/);
 
 	if(isVolumeForVideoAudible(videoElement)) //not yet adjusted
@@ -305,7 +305,7 @@ function makeSetAudioURL(videoElement, url) {
 		if (url === '' || videoElement.src === url) {
             return;
         }
-		
+
 		addAvSyncControlls();
 
 		if(synchronizer != undefined)
@@ -323,7 +323,7 @@ function makeSetAudioURL(videoElement, url) {
 			globalMaxSelectableDelayValue = values.maxSelectableDelayValue;
 
 			addAvSyncButton();
-				
+
 			if(values.is_extension_disabled === false)
 			{
 				if(synchronizer == undefined)
@@ -331,7 +331,7 @@ function makeSetAudioURL(videoElement, url) {
 					synchronizer = new Synchronizer(values.syncValue, values.maxAcceptableDelayValue/1000);
 					synchronizer.startMainAdjustLagLoop();
 				}
-				
+
 				//addDelayControls();
 				processPlayerDelayChange(values.syncValue);
 			}
@@ -363,10 +363,10 @@ function addAvSyncControlls(){
 function addMediaDeviceManagerIframe()
 {
 	var iframe = document.createElement("IFRAME");
-	iframe.setAttribute("src", chrome.extension.getURL("html/mediaDeviceManager.html"));
+	iframe.setAttribute("src", chrome.runtime.getURL("html/mediaDeviceManager.html"));
 	iframe.setAttribute("allow", "microphone");
 	iframe.hidden = true
-	document.body.appendChild(iframe);	 
+	document.body.appendChild(iframe);
 }
 
 function getAvSyncMenuHtml(isExtensionDisabled)
@@ -388,11 +388,11 @@ function getAvSyncMenuHtml(isExtensionDisabled)
 								'		</g>'+
 								'	</g>'+
 								'</svg>';
-								
+
 	return '<div class="ytp-popup ytp-settings-menu" data-layer="100" id="yt-av-sync-menu" style="width: 251px; height: 200px; display: none;">'+
 			'<div class="ytp-panel" style="min-width: 250px; width: 251px; height: 200px;">'+
 				'<div class="ytp-panel-menu" role="menu" style="height: 200px;">'+
-					
+
 					'<div class="ytp-menuitem" role="menuitemcheckbox" aria-checked="true" tabindex="0">'+
 						'<div class="ytp-menuitem-icon"></div>'+
 						'<div class="ytp-menuitem-label"></div>'+
@@ -400,7 +400,7 @@ function getAvSyncMenuHtml(isExtensionDisabled)
 							'<button id="yt-av-sync-menu-close-button" style="width: 20px; height: 20px; border: none; background-color: transparent; padding: 0; cursor:pointer; color: white; ">x</button>'+
 						'</div>'+
 					'</div>'+
-					
+
 					'<div class="ytp-menuitem" role="menuitemcheckbox" aria-checked="'+!(isExtensionDisabled)+'" tabindex="0">'+
 						'<div class="ytp-menuitem-icon"></div>'+
 						'<div class="ytp-menuitem-label">Audio/Video Sync</div>'+
@@ -408,18 +408,18 @@ function getAvSyncMenuHtml(isExtensionDisabled)
 							'<div class="ytp-menuitem-toggle-checkbox" id="toggleExtensionButton"></div>'+
 						'</div>'+
 					'</div>'+
-					
+
 					'<div class="ytp-menuitem" role="menuitemcheckbox" aria-checked="true" tabindex="0" id="liveVideoMessage" hidden>'+
 						'<div class="ytp-menuitem-icon"></div>'+
 						'<div class="ytp-menuitem-label">Not possible to adjust in Live videos!</div>'+
 						'<div class="ytp-menuitem-content">'+
 						'</div>'+
 					'</div>'+
-					
+
 					'<div class="ytp-menuitem" role="menuitemcheckbox" aria-checked="true" tabindex="0" id="delayMenuItem">'+
 						'<div class="ytp-menuitem-icon"></div>'+
 						'<div class="ytp-menuitem-label">'+
-						
+
 						'<span id = "delayControls">' +
 								'<button id = "decreaseDelayButton" style="width: 24px; border-radius: 50%; outline: none; box-shadow: none;">-</button> ' +
 								'<input type="number" id="delayInPlayer" title = "Delay in milliseconds" style="color: white; background: transparent; border: none; text-align: right;" ' +
@@ -428,24 +428,24 @@ function getAvSyncMenuHtml(isExtensionDisabled)
 								'<button id = "increaseDelayButton" style="width: 24px; border-radius: 50%; outline: none; box-shadow: none;">+</button> ' +
 								'<span id = "precision"></span> ' +
 							'</span>'+
-						
+
 						'</div>'+
-						
-						'<div class="ytp-menuitem-content" id="delay-controls-menuitem">'+		
+
+						'<div class="ytp-menuitem-content" id="delay-controls-menuitem">'+
 
 							'<button id="saveDelay" title="Save as global delay" style="width: 20px; height: 20px; border: none; background-color: transparent; padding: 0; margin: 5px; cursor:pointer; fill: #eee">'+
 								//save button
 								saveButtonSvg +
 							'</button>'+
 						'</div>'+
-					'</div>'+	
-			
+					'</div>'+
+
 					'<div class="ytp-menuitem" role="menuitemcheckbox" aria-checked="true" tabindex="0">'+
 						'<div class="ytp-menuitem-icon"></div>'+
-						'<div class="ytp-menuitem-label"><a target="_blank" href="'+ chrome.extension.getURL("html/options.html") +'">More Options</a></div>'+
+						'<div class="ytp-menuitem-label"><a target="_blank" href="'+ chrome.runtime.getURL("html/options.html") +'">More Options</a></div>'+
 						'<div class="ytp-menuitem-content">'+
 						'</div>'+
-					'</div>'+				
+					'</div>'+
 				'</div>'+
 			'</div>'+
 		'</div>';
@@ -463,30 +463,30 @@ function addAvSyncButton(syncValue, isExtensionDisabled){
 	{
 		const ytpSettingsMenuElement = document.getElementsByClassName('ytp-settings-menu')[0];
 		ytpSettingsMenuElement.insertAdjacentHTML('afterend', getAvSyncMenuHtml(isExtensionDisabled));
-						
+
 		document.getElementById("delayInPlayer").addEventListener('keydown', processDelayInPlayerKeyDown, true);
 		document.getElementById("delayInPlayer").addEventListener('input', processDelayInPlayer);
 		document.getElementById("increaseDelayButton").addEventListener('click', processDelayAdjustButtonClick, true);
-		document.getElementById("decreaseDelayButton").addEventListener('click', processDelayAdjustButtonClick, true);		
+		document.getElementById("decreaseDelayButton").addEventListener('click', processDelayAdjustButtonClick, true);
 		document.getElementById("yt-av-sync-menu-close-button").addEventListener('click', toggleAvSyncMenu, true);
-		document.getElementById("toggleExtensionButton").addEventListener('click', toggleExtension, true);	
+		document.getElementById("toggleExtensionButton").addEventListener('click', toggleExtension, true);
 		document.getElementById("saveDelay").addEventListener('click', saveDelayButtonClick, true);
-	
+
 		const ytpSettingsButtonElement = document.getElementsByClassName('ytp-settings-button')[0];
-		
+
 		var ytAvSyncIconUrl = chrome.runtime.getURL("img/white_icon19.png");
 		ytpSettingsButtonElement.insertAdjacentHTML('afterend', getAvSyncButtonHtml());
-	
+
 		var extraEmptyButton = document.getElementById("yt-av-sync").nextElementSibling;
-		
+
 		if(extraEmptyButton.innerHTML === '') //Extra element needs to be removed since it is breaking the layout.
 		{
 			extraEmptyButton.remove();
 		}
-		
+
 		document.getElementById("yt-av-sync").addEventListener('click', toggleAvSyncMenu, true);
 
-		processPlayerDelayChange(syncValue);		
+		processPlayerDelayChange(syncValue);
 	}
 }
 
@@ -506,7 +506,7 @@ function adjustMenuForLiveVideos()
 function saveDelayButtonClick(event)
 {
 	var syncValue = document.getElementById("delayInPlayer").value;
-	
+
 	chrome.runtime.sendMessage({message: "processSyncChange", syncValue: syncValue}, function(response) {
 	});
 	document.getElementById("saveDelay").style.fill = "#90ee90";
@@ -515,7 +515,7 @@ function saveDelayButtonClick(event)
 function toggleExtension()
 {
 	chrome.runtime.sendMessage({message: "toggleExtension"}, function(response) {
-			
+
 	});
 }
 
@@ -551,7 +551,7 @@ function addDelayControls()
 }
 
 function toggleAvSyncMenu(event)
-{	
+{
 	var ytAvSyncMenu = document.getElementById("yt-av-sync-menu");
 	if(ytAvSyncMenu.style.display === "none")
 	{
@@ -567,7 +567,7 @@ function removeLiveVideoMessage()
 {
 	let delayMenuItem = document.getElementById("delayMenuItem");
 	let liveVideoMessage = document.getElementById("liveVideoMessage");
-		
+
 	if(delayMenuItem != null)
 	{
 		delayMenuItem.hidden = false;
@@ -579,7 +579,7 @@ function showLiveVideoMessage()
 {
 	let delayMenuItem = document.getElementById("delayMenuItem");
 	let liveVideoMessage = document.getElementById("liveVideoMessage");
-		
+
 	if(delayMenuItem != null)
 	{
 		delayMenuItem.hidden = true;
@@ -634,15 +634,15 @@ function processPlayerDelayChange(adjustedValue)
 	if (delayInPlayerElement.checkValidity())
 	{
 		if(adjustedValue != undefined)
-		{	
+		{
 			updateDelayInPlayerTitle(adjustedValue);
 		}
-		
+
 		if(synchronizer != undefined)
 		{
 			if(adjustedValue != undefined)
-			{			
-				synchronizer.syncValue = adjustedValue;				
+			{
+				synchronizer.syncValue = adjustedValue;
 			}
 			synchronizer.startMainAdjustLagLoop();
 		}
@@ -656,22 +656,22 @@ function processPlayerDelayChange(adjustedValue)
 function updateDelayInPlayerTitle(value){
 	const delayInPlayerElement = window.document.getElementById("delayInPlayer");
 	if(value < 0)
-	{ 
+	{
 		delayInPlayerElement.title = "Audio will be hastened";
 	}
 	else if(value > 0)
 	{
 		delayInPlayerElement.title = "Audio will be delayed";
 	}
-	else 
+	else
 	{
 		delayInPlayerElement.title = "No sync";
-	}	
+	}
 }
 
-window.addEventListener('DOMContentLoaded', (event) => {		
+window.addEventListener('DOMContentLoaded', (event) => {
 
-	//needed for a smooth transition to the next video in a playlist.	
+	//needed for a smooth transition to the next video in a playlist.
 	if(synchronizer !== undefined)
 	{
 		synchronizer.clearSyncLoop();
@@ -682,8 +682,8 @@ window.addEventListener('DOMContentLoaded', (event) => {
     if(videoElement != undefined && isValidChromeRuntime())
 	{
 		addAvSyncControlls();
-				
-		
+
+
 		chrome.runtime.sendMessage({message: "getCurrentTimeBeforeToggle"}, function(response) {
 			if(response != "notFound" && response.time > 0 && response.url === window.location.href)
 				{

@@ -40,32 +40,32 @@ class Background {
         };
 
         this.enableExtension = () => {
-            chrome.browserAction.setIcon({
+            chrome.action.setIcon({
                 path: {
-                    19: 'img/icon19.png',
-                    38: 'img/icon38.png',
+                    19: '/img/icon19.png',
+                    38: '/img/icon38.png',
                 },
             });
 
 			this.saveSettings(false);
 
-			chrome.browserAction.setTitle({title: "YouTube Audio/Video Sync - Enabled"});
+			chrome.action.setTitle({title: "YouTube Audio/Video Sync - Enabled"});
 
-            chrome.tabs.onUpdated.addListener(this.sendMessage);
-            chrome.webRequest.onBeforeRequest.addListener(this.processRequest, { urls: ['<all_urls>'] });
+      chrome.tabs.onUpdated.addListener(this.sendMessage);
+      chrome.webRequest.onBeforeRequest.addListener(this.processRequest, { urls: ['<all_urls>'] });
 			background.refreshYoutubeTab.call();
         };
 
         this.disableExtension = () => {
-            chrome.browserAction.setIcon({
+            chrome.action.setIcon({
                 path: {
-                    19: 'img/disabled_icon19.png',
-                    38: 'img/disabled_icon38.png',
+                    19: '/img/disabled_icon19.png',
+                    38: '/img/disabled_icon38.png',
                 },
             });
 
 			this.saveSettings(true);
-			chrome.browserAction.setTitle({title: "YouTube Audio/Video Sync - Disabled"});
+			chrome.action.setTitle({title: "YouTube Audio/Video Sync - Disabled"});
 
             chrome.tabs.onUpdated.removeListener(this.sendMessage);
             chrome.webRequest.onBeforeRequest.removeListener(this.processRequest);
@@ -108,23 +108,42 @@ class Background {
 		}
 
 		this.performInstallActions = (details) => {
+      console.log();
 			if(details.reason === "install")
 			{
-				const optionsUrl = chrome.runtime.getURL('html/options.html');
+        const optionsUrl = chrome.runtime.getURL('html/options.html');
 				chrome.tabs.create({url: optionsUrl});
 
 				this.enableExtension();
 				chrome.storage.local.set({ "syncValue": 0 });
 			}
 			else if(details.reason === "update")
-			{								
-				
+			{
+
 				this.migrateToReversedSignSyncValue();
 				this.toggleExtensionBasedOnStoredValue();
-				
 			}
+
+      console.log("adding context menus")
+
+      chrome.contextMenus.create({
+        id: "support-command",
+        title: "⚙️ Support",
+        contexts: ["action"]
+      });
+
+      //chrome.contextMenus.create({
+      //  title: "🌟 Leave a review",
+      //  contexts: ["action"]
+      //});
+
+      chrome.contextMenus.create({
+        id: "donate-command",
+        title: "💳 Donate",
+        contexts: ["action"]
+      });
 		}
-		
+
 		this.migrateToReversedSignSyncValue = () => {
 			chrome.storage.local.get(['syncValue', 'delayValue'], (values) => {
 					let delayValue = values.delayValue;
@@ -138,7 +157,7 @@ class Background {
 					}
 				});
 		}
-		
+
 		this.toggleExtension = () => {
 				chrome.storage.local.get('is_extension_disabled', (values) => {
 					let disabled = values.is_extension_disabled;
@@ -148,9 +167,9 @@ class Background {
 					else {
 						this.disableExtension();
 					}
-				});	
-		}	
-		
+				});
+		}
+
 		this.toggleExtensionBasedOnStoredValue = () => {
 				chrome.storage.local.get('is_extension_disabled', (values) => {
 					let disabled = values.is_extension_disabled;
@@ -160,19 +179,19 @@ class Background {
 					else {
 						this.enableExtension();
 					}
-				});	
+				});
 		}
-		
-		this.performAudioDeviceConnectedActions = (audioDevice) => 
+
+		this.performAudioDeviceConnectedActions = (audioDevice) =>
 		{
-			chrome.storage.local.set({autoToggleAudioDevice : true, audioDevice : audioDevice});											
-								
+			chrome.storage.local.set({autoToggleAudioDevice : true, audioDevice : audioDevice});
+
 			chrome.storage.local.get('is_extension_disabled', (values) => {
 					let disabled = values.is_extension_disabled;
 					if (disabled) {
 						this.enableExtension();
-					}					
-				});				
+					}
+				});
 		}
 
 		this.processSyncChange = (syncValue) => {
@@ -185,22 +204,22 @@ class Background {
 				});
 		}
 
-        chrome.browserAction.onClicked.addListener(() => {
-			chrome.browserAction.setBadgeText({text: ""});
+    chrome.action.onClicked.addListener(() => {
+		  chrome.action.setBadgeText({text: ""});
 
-            chrome.storage.local.get('is_extension_disabled', (values) => {
-                let disabled = values.is_extension_disabled;
-                if (disabled) {
-                    this.enableExtension();
-                }
-                else {
-                    this.disableExtension();
-                }
+      chrome.storage.local.get('is_extension_disabled', (values) => {
+          let disabled = values.is_extension_disabled;
+          if (disabled) {
+            this.enableExtension();
+          }
+          else {
+            this.disableExtension();
+          }
             });
         });
 
 		chrome.runtime.onStartup.addListener(() => {
-			chrome.browserAction.setBadgeText({text: ""});
+			chrome.action.setBadgeText({text: ""});
 
             chrome.storage.local.get('is_extension_disabled', (values) => {
                 let disabled = values.is_extension_disabled;
@@ -222,9 +241,9 @@ class Background {
 		{
 			if(request.message === "processSyncChange")
 			{
-				this.processSyncChange(request.syncValue);				
+				this.processSyncChange(request.syncValue);
 			}
-			
+
 			if(request.message === "maxSelectableDelayChange")
 			{
 				const maxSelectableDelayValue = request.maxSelectableDelayValue;
@@ -268,33 +287,33 @@ class Background {
 
 			if(request.message === "setWaitingBadge")
 			{
-				chrome.browserAction.setBadgeText({text: "⌛", tabId: sender.tab.id});
-				chrome.browserAction.setBadgeBackgroundColor({color: "#FFFFFF", tabId: sender.tab.id});
+				chrome.action.setBadgeText({text: "⌛", tabId: sender.tab.id});
+				chrome.action.setBadgeBackgroundColor({color: "#FFFFFF", tabId: sender.tab.id});
 			}
 
 			if(request.message === "removeWaitingBadge")
 			{
-				chrome.browserAction.setBadgeText({text: "", tabId: sender.tab.id});
+				chrome.action.setBadgeText({text: "", tabId: sender.tab.id});
 			}
-			
+
 			if(request.message === "toggleExtension")
 			{
 				this.toggleExtension();
 			}
-			
+
 			if(request.message === "performAudioDeviceConnectedActions")
 			{
 				this.performAudioDeviceConnectedActions(request.audioDevice);
 			}
-			
+
 			if(request.message === "performAudioDeviceDisconnectedActions")
 			{
 				chrome.storage.local.get('is_extension_disabled', (values) => {
 					let disabled = values.is_extension_disabled;
 					if (!disabled) {
 						this.disableExtension();
-					}					
-				});	
+					}
+				});
 			}
 		};
 
@@ -320,23 +339,16 @@ class Background {
 		  });
 		}
 
-		chrome.contextMenus.create({
-		  title: "⚙️ Support",
-		  contexts: ["browser_action"],
-		  onclick: this.goToSupport
-		});
+    this.contextMenuClicked = (info, tab) => {
+      if (info.menuItemId == "support-command") {
+        this.goToSupport()
+      }
+      else if (info.menuItemId == "donate-command") {
+        this.goToBuyMeACoffee()
+      }
+    }
 
-		//chrome.contextMenus.create({
-		//  title: "🌟 Leave a review",
-		//  contexts: ["browser_action"],
-		//  onclick: this.goToReviews
-		//});
-
-		chrome.contextMenus.create({
-		  title: "💳 Donate",
-		  contexts: ["browser_action"],
-		  onclick: this.goToBuyMeACoffee
-		});
+    chrome.contextMenus.onClicked.addListener(this.contextMenuClicked);
 
 		chrome.runtime.setUninstallURL("https://docs.google.com/forms/d/e/1FAIpQLSd5gELqtwb9rJQgdK7SRAA5--fZQxTXDLNBIU2pOteHg1Kuig/viewform");
 		//For firefox: https://docs.google.com/forms/d/e/1FAIpQLSd5gELqtwb9rJQgdK7SRAA5--fZQxTXDLNBIU2pOteHg1Kuig/viewform

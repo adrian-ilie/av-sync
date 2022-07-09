@@ -1,7 +1,7 @@
 {
   "name": "YouTube Audio/Video Sync",
-  "version": "0.3.6",
-  "manifest_version": 2,
+  "version": "0.4.0",
+  "manifest_version": 3,
   "description": "Fix wireless audio streaming delay for YouTube",
   "offline_enabled": true,
   "icons": {
@@ -11,31 +11,39 @@
     "128": "img/icon128.png"
   },
   "background": {
-    "scripts": ["js/background.js"]
+    "service_worker": "js/background.js"
   },
   "permissions": [
-	"webRequest",
-    "*://*.googlevideo.com/*",
-	  "*://*.youtube.com/*",
+	  "webRequest",
     "storage",
-	"notifications",
-	"contextMenus"
+	  "notifications",
+	  "contextMenus"
   ],
-  "browser_action": {
+  "host_permissions":
+  [
+	  "*://*.googlevideo.com/*",
+	  "*://*.youtube.com/*"
+  ],
+  "action": {
     "default_title": "YouTube Audio/Video Sync"
   },
   "content_scripts": [
     {
       "matches": ["*://*.youtube.com/*"],
-	  "exclude_matches": ["*://music.youtube.com/*"],
-	  "css": ["css/contentScript.css"],
+	    "exclude_matches": ["*://music.youtube.com/*"],
+	    "css": ["css/contentScript.css"],
       "js": [ "js/content-script.js" ],
       "run_at": "document_start"
     }
   ],
   "web_accessible_resources": [
-    "html/options.html",
-	"html/mediaDeviceManager.html"
+    {
+      "resources": [ "html/options.html", "html/mediaDeviceManager.html",
+        "img/disabled_icon19.png", "img/disabled_icon38.png",
+        "img/icon19.png", "img/icon38.png" ],
+      "extension_ids": [ "fiilfdpoephbfecmocjhnnbnpadaacbi" ],
+      "matches": ["*://*.youtube.com/*"]
+    }
   ],
   "options_page": "html/options.html"
 }
