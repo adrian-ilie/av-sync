@@ -362,11 +362,15 @@ function addAvSyncControlls(){
 
 function addMediaDeviceManagerIframe()
 {
+  if(document.getElementById("mediaDeviceManagerIframe") === null)
+  {
 	var iframe = document.createElement("IFRAME");
+	iframe.setAttribute("id", "mediaDeviceManagerIframe");
 	iframe.setAttribute("src", chrome.extension.getURL("html/mediaDeviceManager.html"));
 	iframe.setAttribute("allow", "microphone");
 	iframe.hidden = true
 	document.body.appendChild(iframe);	 
+  }
 }
 
 function getAvSyncMenuHtml(isExtensionDisabled)
@@ -472,10 +476,17 @@ function addAvSyncButton(syncValue, isExtensionDisabled){
 		document.getElementById("toggleExtensionButton").addEventListener('click', toggleExtension, true);	
 		document.getElementById("saveDelay").addEventListener('click', saveDelayButtonClick, true);
 	
-		const ytpSettingsButtonElement = document.getElementsByClassName('ytp-settings-button')[0];
+		const ytpSettingsButtonElements = document.getElementsByClassName('ytp-settings-button');
 		
 		var ytAvSyncIconUrl = chrome.runtime.getURL("img/white_icon19.png");
-		ytpSettingsButtonElement.insertAdjacentHTML('afterend', getAvSyncButtonHtml());
+		
+		for(const settingsButton of ytpSettingsButtonElements)
+		{
+		  if (settingsButton.closest("#player") !== null) //sometimes there are multiple buttons with this class, we are looking for the one inside the player
+		  {
+			settingsButton.insertAdjacentHTML('afterend', getAvSyncButtonHtml());
+		  }
+		}		
 	
 		var extraEmptyButton = document.getElementById("yt-av-sync").nextElementSibling;
 		
