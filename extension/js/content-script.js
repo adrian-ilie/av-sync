@@ -116,6 +116,14 @@ class Synchronizer {
               message: "setWaitingBadge"
             });
           }
+          else
+          {
+
+              document.getElementById("yt-av-sync").removeEventListener('click', toggleAvSyncMenu, true);
+              document.getElementById("yt-av-sync").addEventListener('click', toggleReloadPageMessage, true);
+              document.getElementById("yt-av-sync-reload-page-close-button").addEventListener('click', toggleReloadPageMessage, true);
+
+          }
 
           //the first time an unnacceptable deviation is detected from the secondary loop, start the main loop
           if (!this.isMainLoopRunning) {
@@ -136,13 +144,21 @@ class Synchronizer {
               message: "removeWaitingBadge"
             });
           }
+          else
+          {
+
+              document.getElementById("yt-av-sync").removeEventListener('click', toggleAvSyncMenu, true);
+              document.getElementById("yt-av-sync").addEventListener('click', toggleReloadPageMessage, true);
+              document.getElementById("yt-av-sync-reload-page-close-button").addEventListener('click', toggleReloadPageMessage, true);
+
+          }
         }
       }
     }
   }
 }
 
-let synchronizer;
+var synchronizer;
 
 const muteVolumeAdjustment = 100000;
 const syncAudioElementName = 'syncAudio';
@@ -264,12 +280,30 @@ function pauseSyncAudio() {
       message: "removeWaitingBadge"
     });
   }
+  else
+  {
+
+      document.getElementById("yt-av-sync").removeEventListener('click', toggleAvSyncMenu, true);
+      document.getElementById("yt-av-sync").addEventListener('click', toggleReloadPageMessage, true);
+      document.getElementById("yt-av-sync-reload-page-close-button").addEventListener('click', toggleReloadPageMessage, true);
+
+  }
   if (synchronizer != undefined) {
     synchronizer.clearSyncLoop();
   }
 }
 
 function makeSetAudioURL(videoElement, url) {
+
+  /*
+  let audioElement = document.getElementById(syncAudioElementName);
+  //This is needed to avoid hearing the audio from a previous video
+  if(url !== '' && videoElement.src !== url && document.contains(audioElement) && audioElement.src !== url)
+  {
+    console.log("aaaaaaaaaaaaaa");
+    createSyncAudioElement(url);
+  }*/
+
   function setAudioURL() {
     if (url === '' || videoElement.src === url) {
       return;
@@ -283,27 +317,35 @@ function makeSetAudioURL(videoElement, url) {
 
     turnVolumeForVideoToInaudible(videoElement); //is this needed?
 
-    chrome.storage.local.get({
-      syncValue: 0,
-      maxSelectableDelayValue: 5000,
-      is_extension_disabled: true,
-      maxAcceptableDelayValue: 25
-    }, (values) => {
+    if (isValidChromeRuntime()) {
 
-      globalMaxSelectableDelayValue = values.maxSelectableDelayValue;
+      chrome.storage.local.get({
+        syncValue: 0,
+        maxSelectableDelayValue: 5000,
+        is_extension_disabled: true,
+        maxAcceptableDelayValue: 25
+      }, (values) => {
 
-      addAvSyncButton();
+        globalMaxSelectableDelayValue = values.maxSelectableDelayValue;
 
-      if (values.is_extension_disabled === false) {
-        if (synchronizer == undefined) {
-          synchronizer = new Synchronizer(values.syncValue, values.maxAcceptableDelayValue / 1000);
-          synchronizer.startMainAdjustLagLoop();
+        addAvSyncButton();
+
+        if (values.is_extension_disabled === false) {
+          if (synchronizer == undefined) {
+            synchronizer = new Synchronizer(values.syncValue, values.maxAcceptableDelayValue / 1000);
+            synchronizer.startMainAdjustLagLoop();
+          }
+
+          //addDelayControls();
+          processPlayerDelayChange(values.syncValue);
         }
-
-        //addDelayControls();
-        processPlayerDelayChange(values.syncValue);
-      }
     });
+  }
+  else {
+    document.getElementById("yt-av-sync").removeEventListener('click', toggleAvSyncMenu, true);
+    document.getElementById("yt-av-sync").addEventListener('click', toggleReloadPageMessage, true);
+    document.getElementById("yt-av-sync-reload-page-close-button").addEventListener('click', toggleReloadPageMessage, true);
+  }
 
     createSyncAudioElement(url);
 
@@ -318,24 +360,36 @@ function makeSetAudioURL(videoElement, url) {
 }
 
 function addAvSyncControlls() {
-  chrome.storage.local.get({
-    syncValue: 0,
-    maxSelectableDelayValue: 5000,
-    is_extension_disabled: false
-  }, (values) => {
-    globalMaxSelectableDelayValue = values.maxSelectableDelayValue;
-    addAvSyncButton(values.syncValue, values.is_extension_disabled);
-    adjustMenuForLiveVideos();
-  });
-  addMediaDeviceManagerIframe();
+  if(isValidChromeRuntime())
+  {
+    chrome.storage.local.get({
+      syncValue: 0,
+      maxSelectableDelayValue: 5000,
+      is_extension_disabled: false
+    }, (values) => {
+      globalMaxSelectableDelayValue = values.maxSelectableDelayValue;
+      addAvSyncButton(values.syncValue, values.is_extension_disabled);
+      adjustMenuForLiveVideos();
+    });
+    addMediaDeviceManagerIframe();
+  }
+  else {
+    document.getElementById("yt-av-sync").removeEventListener('click', toggleAvSyncMenu, true);
+    document.getElementById("yt-av-sync").addEventListener('click', toggleReloadPageMessage, true);
+    document.getElementById("yt-av-sync-reload-page-close-button").addEventListener('click', toggleReloadPageMessage, true);
+  }
 }
 
 function addMediaDeviceManagerIframe() {
-  let iframe = document.createElement("IFRAME");
-  iframe.setAttribute("src", getURL("html/mediaDeviceManager.html"));
-  iframe.setAttribute("allow", "microphone");
-  iframe.hidden = true
-  document.body.appendChild(iframe);
+  if(document.getElementById("mediaDeviceManagerIframe") === null)
+  {
+    let iframe = document.createElement("IFRAME");
+    iframe.setAttribute("id", "mediaDeviceManagerIframe");
+    iframe.setAttribute("src", getURL("html/mediaDeviceManager.html"));
+    iframe.setAttribute("allow", "microphone");
+    iframe.hidden = true
+    document.body.appendChild(iframe);
+  }
 }
 
 function getAvSyncMenuHtml(isExtensionDisabled) {
@@ -452,9 +506,15 @@ function addAvSyncButton(syncValue, isExtensionDisabled) {
     document.getElementById("toggleExtensionButton").addEventListener('click', toggleExtension, true);
     document.getElementById("saveDelay").addEventListener('click', saveDelayButtonClick, true);
 
-    const ytpSettingsButtonElement = document.getElementsByClassName('ytp-settings-button')[0];
+    const ytpSettingsButtonElements = document.getElementsByClassName('ytp-settings-button');
 
-    ytpSettingsButtonElement.insertAdjacentHTML('afterend', getAvSyncButtonHtml());
+    for(const settingsButton of ytpSettingsButtonElements)
+    {
+      if (settingsButton.closest("#player") !== null) //sometimes there are multiple buttons with this class, we are looking for the one inside the player
+      {
+        settingsButton.insertAdjacentHTML('afterend', getAvSyncButtonHtml());
+      }
+    }
 
     let extraEmptyButton = document.getElementById("yt-av-sync").nextElementSibling;
 
@@ -523,12 +583,12 @@ function addDelayControls() {
 }
 
 function toggleAvSyncMenu(event) {
-  let ytAvSyncMenu = document.getElementById("yt-av-sync-menu");
-  if (ytAvSyncMenu.style.display === "none") {
-    ytAvSyncMenu.style.display = "block";
-  } else {
-    ytAvSyncMenu.style.display = "none";
-  }
+    let ytAvSyncMenu = document.getElementById("yt-av-sync-menu");
+    if (ytAvSyncMenu.style.display === "none") {
+      ytAvSyncMenu.style.display = "block";
+    } else {
+      ytAvSyncMenu.style.display = "none";
+    }
 }
 
 function toggleReloadPageMessage(event) {
@@ -637,14 +697,16 @@ window.addEventListener('DOMContentLoaded', (event) => {
       message: "getCurrentTimeBeforeToggle"
     }, handleGetCurrentTimeBeforeToggleResponse);
   }
+  else
+  {
+
+  }
 });
 
 function handleGetCurrentTimeBeforeToggleResponse(response) {
   if (response != "notFound" && response.time > 0 && response.url === window.location.href) {
     const videoElement = window.document.getElementsByTagName('video')[0];
-    console.log(videoElement.currentTime)
     videoElement.currentTime = response.time;
-    console.log(videoElement.currentTime)
 
     //it's now safe to clear this tab's storage.
     sendMessage({
@@ -680,7 +742,9 @@ window.addEventListener('yt-page-data-updated', function () {
     synchronizer.clearSyncLoop();
   }
 
-  const videoElement = window.document.getElementsByTagName('video')[0];
+  let videoElements = window.document.getElementsByTagName('video');
+  //console.log(videoElements.length);
+  const videoElement = videoElements[0];
 
   if (videoElement != undefined && isValidChromeRuntime()) {
     addAvSyncControlls();

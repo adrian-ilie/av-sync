@@ -65,9 +65,11 @@ class Background {
       });
 
       chrome.tabs.onUpdated.addListener(this.sendMessage);
+
       chrome.webRequest.onBeforeRequest.addListener(this.processRequest, {
         urls: ['<all_urls>']
       });
+
       background.refreshYoutubeTab.call();
     };
 
@@ -142,14 +144,14 @@ class Background {
     }
 
     this.performInstallActions = (details) => {
-      console.log();
+      //console.log();
       if (details.reason === "install") {
         const optionsUrl = chrome.runtime.getURL('html/options.html');
         chrome.tabs.create({
           url: optionsUrl
         });
 
-        this.enableExtension();
+        this.enableExtension(); //this is probably not needed anymore since from manifest V3 there are workers
         chrome.storage.local.set({
           "syncValue": 0
         });
@@ -252,7 +254,7 @@ class Background {
       chrome.action.setBadgeText({
         text: ""
       });
-      this.toggleExtension();
+      this.toggleExtensionBasedOnStoredValue();
     });
 
     //If for any reason "clearTabStorage" doesn't reach the background script, clear the storage when tab is closed.
