@@ -1,8 +1,8 @@
 import { test as base, expect, BrowserContext, chromium } from "@playwright/test";
 import path from "path";
 
-var HeadphoneMediaDevices:MediaDeviceInfo[] = GetMockMediaDevices("Headphones Mock Device");
-var SpeakersMediaDevices:MediaDeviceInfo[] = GetMockMediaDevices("Speakers Mock Device");
+var HeadphoneMediaDevices: MediaDeviceInfo[] = GetMockMediaDevices("Headphones Mock Device");
+var SpeakersMediaDevices: MediaDeviceInfo[] = GetMockMediaDevices("Speakers Mock Device");
 
 export const test = base.extend<{
   context: BrowserContext;
@@ -53,7 +53,7 @@ function GetMockMediaDevices(mediaServiceLabel) {
     // Pick characers randomly
     let str = '';
     for (let i = 0; i < length; i++) {
-        str += chars.charAt(Math.floor(Math.random() * chars.length));
+      str += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return str;
   }
@@ -66,14 +66,14 @@ function GetMockMediaDevices(mediaServiceLabel) {
   type MockMediaDeviceInfo = Omit<MediaDeviceInfo, 'toJSON'>;
   let mockMediaDeviceInfo1: MockMediaDeviceInfo = {
     deviceId: "default",
-    kind:  kindAudioOutput,
+    kind: kindAudioOutput,
     label: `Default - ${mediaServiceLabel}`,
     groupId: randomGroupId,
   };
 
   let mockMediaDeviceInfo2: MockMediaDeviceInfo = {
     deviceId: randomDeviceId,
-    kind:  kindAudioOutput,
+    kind: kindAudioOutput,
     label: mediaServiceLabel,
     groupId: randomGroupId,
   };
@@ -84,10 +84,9 @@ function GetMockMediaDevices(mediaServiceLabel) {
   return [mockDeviceInfo1, mockDeviceInfo2];
 }
 
-async function SetMockEnumerateDevices(mediaDevices:MediaDeviceInfo[])
-{
-  navigator.mediaDevices.enumerateDevices = function() {
-    return new Promise((res, rej)=>{res(mediaDevices)})
+async function SetMockEnumerateDevices(mediaDevices: MediaDeviceInfo[]) {
+  navigator.mediaDevices.enumerateDevices = function () {
+    return new Promise((res, rej) => { res(mediaDevices) })
   }
 }
 
@@ -108,65 +107,64 @@ test("after new instalation youtube menu works", async ({ page, context, extensi
 
   await expect(syncAudioLocator).not.toBeUndefined();
 
-    // Click on <a> "REJECT ALL"
-    await rejectAllCookies.click();
+  // Click on <a> "REJECT ALL"
+  await rejectAllCookies.click();
 
-    //Av Sync button is visible
-    await expect(ytAvSyncButton).toBeVisible();
+  //Av Sync button is visible
+  await expect(ytAvSyncButton).toBeVisible();
 
-    const enableDisableExtensionButtonAriaChecked = await enableDisableExtensionButton.getAttribute("aria-checked")
-    await expect(enableDisableExtensionButtonAriaChecked).toContain("true")
+  const enableDisableExtensionButtonAriaChecked = await enableDisableExtensionButton.getAttribute("aria-checked")
+  await expect(enableDisableExtensionButtonAriaChecked).toContain("true")
 
-    await expect(delayInPlayer).toBeHidden();
+  await expect(delayInPlayer).toBeHidden();
 
-    // Click on <button> #yt-av-sync
-    await ytAvSyncButton.click();
+  // Click on <button> #yt-av-sync
+  await ytAvSyncButton.click();
 
-    await expect(delayInPlayer).toBeVisible();
+  await expect(delayInPlayer).toBeVisible();
 
-    // Initial value of delayInPlayer is set 0
-    await expect(delayInPlayer).toHaveValue("0");
+  // Initial value of delayInPlayer is set 0
+  await expect(delayInPlayer).toHaveValue("0");
 
-    // Click button:has-text("+")
-    await delayPlusButton.click();
-    await expect(delayInPlayer).toHaveValue("1");
-    const validityStatusPositiveValue = await delayInPlayer.evaluate((element: HTMLInputElement) => element.checkValidity())
-    await expect(validityStatusPositiveValue).toBeTruthy();
+  // Click button:has-text("+")
+  await delayPlusButton.click();
+  await expect(delayInPlayer).toHaveValue("1");
+  const validityStatusPositiveValue = await delayInPlayer.evaluate((element: HTMLInputElement) => element.checkValidity())
+  await expect(validityStatusPositiveValue).toBeTruthy();
 
-    // Click twice button:has-text("-")
-    await delayMinusButton.click();
-    await delayMinusButton.click();
-    await expect(delayInPlayer).toHaveValue("-1");
-    const validityStatusNegativeValue = await delayInPlayer.evaluate((element: HTMLInputElement) => element.checkValidity())
-    await expect(validityStatusNegativeValue).toBeTruthy();
+  // Click twice button:has-text("-")
+  await delayMinusButton.click();
+  await delayMinusButton.click();
+  await expect(delayInPlayer).toHaveValue("-1");
+  const validityStatusNegativeValue = await delayInPlayer.evaluate((element: HTMLInputElement) => element.checkValidity())
+  await expect(validityStatusNegativeValue).toBeTruthy();
 
-    // Fill delayInPlayer with too large number
-    await delayInPlayer.fill("5001")
-    const validityStatusTooLargePositive = await delayInPlayer.evaluate((element: HTMLInputElement) => element.checkValidity())
-    await expect(validityStatusTooLargePositive).toBeFalsy();
+  // Fill delayInPlayer with too large number
+  await delayInPlayer.fill("5001")
+  const validityStatusTooLargePositive = await delayInPlayer.evaluate((element: HTMLInputElement) => element.checkValidity())
+  await expect(validityStatusTooLargePositive).toBeFalsy();
 
-    // Fill delayInPlayer with too large negative number
-    await delayInPlayer.fill("-5001")
-    const validityStatusTooLargeNegative = await delayInPlayer.evaluate((element: HTMLInputElement) => element.checkValidity())
-    await expect(validityStatusTooLargeNegative).toBeFalsy();
+  // Fill delayInPlayer with too large negative number
+  await delayInPlayer.fill("-5001")
+  const validityStatusTooLargeNegative = await delayInPlayer.evaluate((element: HTMLInputElement) => element.checkValidity())
+  await expect(validityStatusTooLargeNegative).toBeFalsy();
 
-    await avSyncMenuCloseButton.click();
+  await avSyncMenuCloseButton.click();
 });
 
 
 const mediaDeviceConnectedTestOptions = [{
-	mediaDevice: HeadphoneMediaDevices,
-	extensionEnabled: "true",
-	syncAudioCount: 1
+  mediaDevice: HeadphoneMediaDevices,
+  extensionEnabled: "true",
+  syncAudioCount: 1
 },
 {
-	mediaDevice: SpeakersMediaDevices,
-	extensionEnabled: "false",
-	syncAudioCount: 0
+  mediaDevice: SpeakersMediaDevices,
+  extensionEnabled: "false",
+  syncAudioCount: 0
 }]
 
-for (const testOption of mediaDeviceConnectedTestOptions)
-{
+for (const testOption of mediaDeviceConnectedTestOptions) {
   test(`Device connected, expect extension enabled = ${testOption.extensionEnabled}`, async ({ page, context, extensionId }) => {
     const rejectAllCookies = page.locator('.style-primary:nth-child(1) > .yt-simple-endpoint');
     const syncAudioLocator = page.locator('#syncAudio');
@@ -209,7 +207,7 @@ for (const testOption of mediaDeviceConnectedTestOptions)
 
     await extensionOptionsPage.waitForTimeout(1000); //todo find a better way to wait for the devicechange dispatch event
 
-    const currentTimeAfterMediaDeviceChange = await youtubeVideo.getAttribute("currentTime")  as unknown as number;
+    const currentTimeAfterMediaDeviceChange = await youtubeVideo.getAttribute("currentTime") as unknown as number;
 
     await ytAvSyncButton.click();
     await expect(delayInPlayer).toBeVisible();
@@ -231,8 +229,7 @@ for (const testOption of mediaDeviceConnectedTestOptions)
 async function DispatchDeviceChangeEvent(page) {
   for (const childFrame of page.mainFrame().childFrames()) {
     childFrame?.evaluate(async () => { //todo, pick only the mediaDeviceManagerIframe frame to execute the script
-      if(navigator.mediaDevices !== undefined)
-      {
+      if (navigator.mediaDevices !== undefined) {
         //console.log("Message from Iframe")
         //var devices = await navigator.mediaDevices.enumerateDevices()
         //console.log(JSON.stringify(devices))
@@ -244,17 +241,14 @@ async function DispatchDeviceChangeEvent(page) {
   //await page.pause();
 }
 
-async function CloseExtensionOptionsPage(context, page, extensionId)
-{
+async function CloseExtensionOptionsPage(context, page, extensionId) {
   let openedPages = context.pages()
 
   //close the already opened options page and open it again with the mocked media devices
-	for (const openedPage of openedPages)
-	{
-		await page.waitForLoadState();
-		if(openedPage.url() === `chrome-extension://${extensionId}/html/options.html`)
-		{
-			await openedPage.close();
-		}
-	}
+  for (const openedPage of openedPages) {
+    await page.waitForLoadState();
+    if (openedPage.url() === `chrome-extension://${extensionId}/html/options.html`) {
+      await openedPage.close();
+    }
+  }
 }
