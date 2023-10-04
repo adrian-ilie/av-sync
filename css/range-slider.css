@@ -39,10 +39,10 @@ body {
   transition: background .15s ease-in-out;
 }
 .range-slider__range::-webkit-slider-thumb:hover {
-  background: #ff0000;
+  background: #ff5700;
 }
 .range-slider__range:active::-webkit-slider-thumb {
-  background: #ff0000;
+  background: #ff5700;
 }
 .range-slider__range::-moz-range-thumb {
   width: 20px;
@@ -55,13 +55,13 @@ body {
   transition: background .15s ease-in-out;
 }
 .range-slider__range::-moz-range-thumb:hover {
-  background: #ff0000;
+  background: #ff5700;
 }
 .range-slider__range:active::-moz-range-thumb {
-  background: #ff0000;
+  background: #ff5700;
 }
 .range-slider__range:focus::-webkit-slider-thumb {
-  box-shadow: 0 0 0 3px #fff, 0 0 0 6px #ff0000;
+  box-shadow: 0 0 0 3px #fff, 0 0 0 6px #ff5700;
 }
 
 .range-slider__value {
