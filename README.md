@@ -1,5 +1,8 @@
 # Youtube Audio/Video Sync Chrome Extension, Firefox Addon
 ![](img/icon128.png)
+
+:warning: The extension has been taken down by Google for violating the branding guidelines by using the color YOUTUBE RED. I'm currently trying to get it approved in the chrome store again.
+
 ### What does it do?
    There is always a delay when streaming audio from your device to another receiver (Apple TV, AirPlay speaker, Sonos, Network Player, TuneBlade, Bluetooth, etc.) This is causing the video and audio to be out of sync.
    There are also videos on YouTube that have not been synced properly before being uploaded.
