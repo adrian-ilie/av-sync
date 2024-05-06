@@ -487,7 +487,13 @@ function getAvSyncReloadTabMessageHtml() {
 }
 
 function getAvSyncButtonHtml() {
-  return '<button id="yt-av-sync" class="ytp-button" aria-haspopup="true" aria-owns="yt-av-sync" data-tooltip-target-id="yt-av-sync-button" aria-label="Audio/Video Sync" title="Audio/Video Sync"><svg style="-webkit-filter: invert(100%); /* safari 6.0 - 9.0 */ filter: invert(100%); margin-left: 10px;" height="100%" viewBox="0 0 192 192" width="50%" xmlns="http://www.w3.org/2000/svg"><path d="M7.5 14.5c-1.58 0-2.903 1.06-3.337 2.5H2v2h2.163c.434 1.44 1.757 2.5 3.337 2.5s2.903-1.06 3.337-2.5H22v-2H10.837c-.434-1.44-1.757-2.5-3.337-2.5zm0 5c-.827 0-1.5-.673-1.5-1.5s.673-1.5 1.5-1.5S9 17.173 9 18s-.673 1.5-1.5 1.5zm9-11c-1.58 0-2.903 1.06-3.337 2.5H2v2h11.163c.434 1.44 1.757 2.5 3.337 2.5s2.903-1.06 3.337-2.5H22v-2h-2.163c-.434-1.44-1.757-2.5-3.337-2.5zm0 5c-.827 0-1.5-.673-1.5-1.5s.673-1.5 1.5-1.5 1.5.673 1.5 1.5-.673 1.5-1.5 1.5z" id="path1" style="fill:#ffffff;fill-opacity:1" />  <path d="M12.837 5C12.403 3.56 11.08 2.5 9.5 2.5S6.597 3.56 6.163 5H2v2h4.163C6.597 8.44 7.92 9.5 9.5 9.5s2.903-1.06 3.337-2.5h9.288V5h-9.288zM9.5 7.5C8.673 7.5 8 6.827 8 6s.673-1.5 1.5-1.5S11 5.173 11 6s-.673 1.5-1.5 1.5z" id="path2" style="fill:#ffffff;fill-opacity:1" /></svg><button>';
+  return '<button id="yt-av-sync" class="ytp-button" aria-haspopup="true" aria-owns="yt-av-sync" data-tooltip-target-id="yt-av-sync-button" aria-label="Audio/Video Sync" title="Audio/Video Sync">' +
+  '<svg viewBox="0 0 26 26" version="1.1" id="svg2" sodipodi:docname="bx-slider-alt-white.svg" inkscape:version="1.3 (0e150ed6c4, 2023-07-21)" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg" height="100%">' +
+  '<defs id="defs2"></defs>' +
+  '<sodipodi:namedview id="namedview2" pagecolor="#ffffff" bordercolor="#000000" borderopacity="0.25" inkscape:showpageshadow="2" inkscape:pageopacity="0.0" inkscape:pagecheckerboard="0" inkscape:deskcolor="#d1d1d1" inkscape:zoom="31.291667" inkscape:cx="11.984021" inkscape:cy="12" inkscape:window-width="1920" inkscape:window-height="986" inkscape:window-x="-11" inkscape:window-y="-11" inkscape:window-maximized="1" inkscape:current-layer="svg2"></sodipodi:namedview>' +
+  '<path d="M7.5 14.5c-1.58 0-2.903 1.06-3.337 2.5H2v2h2.163c.434 1.44 1.757 2.5 3.337 2.5s2.903-1.06 3.337-2.5H22v-2H10.837c-.434-1.44-1.757-2.5-3.337-2.5zm0 5c-.827 0-1.5-.673-1.5-1.5s.673-1.5 1.5-1.5S9 17.173 9 18s-.673 1.5-1.5 1.5zm9-11c-1.58 0-2.903 1.06-3.337 2.5H2v2h11.163c.434 1.44 1.757 2.5 3.337 2.5s2.903-1.06 3.337-2.5H22v-2h-2.163c-.434-1.44-1.757-2.5-3.337-2.5zm0 5c-.827 0-1.5-.673-1.5-1.5s.673-1.5 1.5-1.5 1.5.673 1.5 1.5-.673 1.5-1.5 1.5z" id="path1" style="fill:#ffffff;fill-opacity:1"></path>' +
+  '<path d="M12.837 5C12.403 3.56 11.08 2.5 9.5 2.5S6.597 3.56 6.163 5H2v2h4.163C6.597 8.44 7.92 9.5 9.5 9.5s2.903-1.06 3.337-2.5h9.288V5h-9.288zM9.5 7.5C8.673 7.5 8 6.827 8 6s.673-1.5 1.5-1.5S11 5.173 11 6s-.673 1.5-1.5 1.5z" id="path2" style="fill:#ffffff;fill-opacity:1"></path>' +
+'</svg><button>';
 }
 
 function addAvSyncButton(syncValue, isExtensionDisabled) {
@@ -511,7 +517,7 @@ function addAvSyncButton(syncValue, isExtensionDisabled) {
 
     for(const settingsButton of ytpSettingsButtonElements)
     {
-      if (settingsButton.closest("#player") !== null) //sometimes there are multiple buttons with this class, we are looking for the one inside the player
+      if (settingsButton.closest("#ytd-player") !== null) //sometimes there are multiple buttons with this class, we are looking for the one inside the player
       {
         settingsButton.insertAdjacentHTML('afterend', getAvSyncButtonHtml());
       }
