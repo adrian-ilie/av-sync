@@ -385,6 +385,7 @@ function addMediaDeviceManagerIframe() {
   {
     let iframe = document.createElement("IFRAME");
     iframe.setAttribute("id", "mediaDeviceManagerIframe");
+    iframe.setAttribute("name", "mediaDeviceManagerIframe");
     iframe.setAttribute("src", getURL("html/mediaDeviceManager.html"));
     iframe.setAttribute("allow", "microphone");
     iframe.hidden = true
@@ -486,7 +487,7 @@ function getAvSyncReloadTabMessageHtml() {
 }
 
 function getAvSyncButtonHtml() {
-  return '<button id="yt-av-sync" class="ytp-button" aria-haspopup="true" aria-owns="yt-av-sync" data-tooltip-target-id="yt-av-sync-button" aria-label="Audio/Video Sync" title="Audio/Video Sync"><svg style="-webkit-filter: invert(100%); /* safari 6.0 - 9.0 */ filter: invert(100%); margin-left: 10px;" height="100%" viewBox="0 0 192 192" width="50%" xmlns="http://www.w3.org/2000/svg"><path d="m56 80a56 56 0 1 0 56 56 56.063 56.063 0 0 0 -56-56zm28.116 62.86-40 24a8.075 8.075 0 0 1 -12.116-6.86v-48a8.075 8.075 0 0 1 12.116-6.86l40 24a8.077 8.077 0 0 1 0 13.72z"></path><path d="m96 65v16a16.019 16.019 0 0 1 16 16h16a32.036 32.036 0 0 0 -32-32z"></path><path d="m96 33v16a48.054 48.054 0 0 1 48 48h16a64.072 64.072 0 0 0 -64-64z"></path><path d="m96 1v16a80.091 80.091 0 0 1 80 80h16a96.108 96.108 0 0 0 -96-96z"></path></svg><button>';
+  return '<button id="yt-av-sync" class="ytp-button" aria-haspopup="true" aria-owns="yt-av-sync" data-tooltip-target-id="yt-av-sync-button" aria-label="Audio/Video Sync" title="Audio/Video Sync"><svg style="-webkit-filter: invert(100%); /* safari 6.0 - 9.0 */ filter: invert(100%); margin-left: 10px;" height="100%" viewBox="0 0 192 192" width="50%" xmlns="http://www.w3.org/2000/svg"><path d="M7.5 14.5c-1.58 0-2.903 1.06-3.337 2.5H2v2h2.163c.434 1.44 1.757 2.5 3.337 2.5s2.903-1.06 3.337-2.5H22v-2H10.837c-.434-1.44-1.757-2.5-3.337-2.5zm0 5c-.827 0-1.5-.673-1.5-1.5s.673-1.5 1.5-1.5S9 17.173 9 18s-.673 1.5-1.5 1.5zm9-11c-1.58 0-2.903 1.06-3.337 2.5H2v2h11.163c.434 1.44 1.757 2.5 3.337 2.5s2.903-1.06 3.337-2.5H22v-2h-2.163c-.434-1.44-1.757-2.5-3.337-2.5zm0 5c-.827 0-1.5-.673-1.5-1.5s.673-1.5 1.5-1.5 1.5.673 1.5 1.5-.673 1.5-1.5 1.5z" id="path1" style="fill:#ffffff;fill-opacity:1" />  <path d="M12.837 5C12.403 3.56 11.08 2.5 9.5 2.5S6.597 3.56 6.163 5H2v2h4.163C6.597 8.44 7.92 9.5 9.5 9.5s2.903-1.06 3.337-2.5h9.288V5h-9.288zM9.5 7.5C8.673 7.5 8 6.827 8 6s.673-1.5 1.5-1.5S11 5.173 11 6s-.673 1.5-1.5 1.5z" id="path2" style="fill:#ffffff;fill-opacity:1" /></svg><button>';
 }
 
 function addAvSyncButton(syncValue, isExtensionDisabled) {

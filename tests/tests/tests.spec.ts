@@ -45,8 +45,15 @@ test.beforeEach(async ({ page }) => {
   await page.addInitScript(SetMockEnumerateDevices, HeadphoneMediaDevices);
 });
 
-function GetMockMediaDevices(mediaServiceLabel) {
+test.afterEach(async ({ page }) => {
+  await page.close();;
+});
 
+test.afterAll(async ({ browser }) => {
+  await browser.close();
+});
+
+function GetMockMediaDevices(mediaServiceLabel) {
   function getRandomAlphaNumericId(length) {
     let chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
@@ -90,9 +97,9 @@ async function SetMockEnumerateDevices(mediaDevices: MediaDeviceInfo[]) {
   }
 }
 
-//after new instalation youtube menu works
+// new instalation youtube menu works
 test("after new instalation youtube menu works", async ({ page, context, extensionId }) => {
-  const rejectAllCookies = page.locator('.style-primary:nth-child(1) > .yt-simple-endpoint');
+  const rejectAllCookies = page.locator('.eom-buttons > ytd-button-renderer');
   const syncAudioLocator = page.locator('syncAudio');
   const enableDisableExtensionButton = await page.locator('#yt-av-sync-menu > .ytp-panel > .ytp-panel-menu > div:nth-child(2)');
   const ytAvSyncButton = page.locator('#yt-av-sync');
@@ -218,7 +225,7 @@ for (const testOption of mediaDeviceConnectedTestOptions) {
     const timeDifference = currentTimeAfterMediaDeviceChange - currentTimeBeforeMediaDeviceChange;
     await expect(Math.abs(timeDifference)).toBeLessThan(100) //todo adjust for delay value
 
-    await extensionOptionsPage.waitForTimeout(6000); //to find a better way to wait for the element
+    //await extensionOptionsPage.waitForTimeout(6000); //to find a better way to wait for the element
 
     await expect(syncAudioLocator).toHaveCount(testOption.syncAudioCount);
 
@@ -227,28 +234,22 @@ for (const testOption of mediaDeviceConnectedTestOptions) {
 }
 
 async function DispatchDeviceChangeEvent(page) {
-  for (const childFrame of page.mainFrame().childFrames()) {
-    childFrame?.evaluate(async () => { //todo, pick only the mediaDeviceManagerIframe frame to execute the script
-      if (navigator.mediaDevices !== undefined) {
-        //console.log("Message from Iframe")
-        //var devices = await navigator.mediaDevices.enumerateDevices()
-        //console.log(JSON.stringify(devices))
-        const e = new Event("devicechange");
-        navigator.mediaDevices.dispatchEvent(e); //not doing anything, probably need to run it in an iframe
-      }
-    });
-  }
+  let mediaDeviceManagerIframe = await page.frame({name: "mediaDeviceManagerIframe"});
+  mediaDeviceManagerIframe.evaluate(async () => {
+    if (navigator.mediaDevices !== undefined) {
+      //console.log("Message from Iframe")
+      //var devices = await navigator.mediaDevices.enumerateDevices()
+      //console.log(JSON.stringify(devices))
+      const e = new Event("devicechange");
+      navigator.mediaDevices.dispatchEvent(e);
+    }
+  });
+
   //await page.pause();
 }
 
 async function CloseExtensionOptionsPage(context, page, extensionId) {
   let openedPages = context.pages()
-
-  //close the already opened options page and open it again with the mocked media devices
-  for (const openedPage of openedPages) {
-    await page.waitForLoadState();
-    if (openedPage.url() === `chrome-extension://${extensionId}/html/options.html`) {
-      await openedPage.close();
-    }
-  }
+  const optionsPage = openedPages.find(op => op.url() === `chrome-extension://${extensionId}/html/options.html`)
+  await optionsPage.close();
 }

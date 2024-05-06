@@ -26,7 +26,7 @@ class Background {
         return;
       }
 
-      const parametersToBeRemoved = ['range', 'rn', 'rbuf'];
+      const parametersToBeRemoved = ['range', 'rn', 'rbuf', 'ump'];
       const audioURL = this.removeURLParameters(url, parametersToBeRemoved);
       if (audioURL && this.tabIds.get(tabId) !== audioURL) {
         this.tabIds.set(tabId, audioURL);
@@ -61,7 +61,7 @@ class Background {
       this.saveSettings(false);
 
       chrome.action.setTitle({
-        title: "YouTube Audio/Video Sync - Enabled"
+        title: "Audio/Video Sync for YouTube™ - Enabled"
       });
 
       chrome.tabs.onUpdated.addListener(this.sendMessage);
@@ -87,7 +87,7 @@ class Background {
 
       this.saveSettings(true);
       chrome.action.setTitle({
-        title: "YouTube Audio/Video Sync - Disabled"
+        title: "Audio/Video Sync for YouTube™ - Disabled"
       });
 
       chrome.tabs.onUpdated.removeListener(this.sendMessage);
@@ -123,7 +123,7 @@ class Background {
             //calling chrome.runtime.lastError is needed in order to suppress this error (Chrome bug): "Unchecked runtime.lastError: Could not establish connection. Receiving end does not exist."
             if (chrome.runtime.lastError || response === undefined) {
               //chrome.notifications.create('', {
-                //title: 'YouTube Audio/Video Sync',
+                //title: 'Audio/Video Sync for YouTube™',
                 //message: 'The extension has been recently installed or updated. To use it on an already opened youtube tab, you first need to refresh that tab!',
                 //iconUrl: 'img/icon128.png',
                 //type: 'basic',
