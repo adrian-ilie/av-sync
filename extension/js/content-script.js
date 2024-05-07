@@ -294,7 +294,6 @@ function pauseSyncAudio() {
 }
 
 function makeSetAudioURL(videoElement, url) {
-
   /*
   let audioElement = document.getElementById(syncAudioElementName);
   //This is needed to avoid hearing the audio from a previous video

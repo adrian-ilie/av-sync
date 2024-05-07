@@ -41,7 +41,7 @@ class Background {
         },function (response) {
           //calling chrome.runtime.lastError is needed in order to suppress this error (Chrome bug): "Unchecked runtime.lastError: Could not establish connection. Receiving end does not exist."
           if (chrome.runtime.lastError || response === undefined) {
-            console.log("sdsdsdsdsdsdsdsdsdjjjjjjjjjjjjjjjjj")
+			console.log(chrome.runtime.lastError);
           }});
       }
     };
@@ -55,7 +55,7 @@ class Background {
       , function(){
         //calling chrome.runtime.lastError is needed in order to suppress this error (Chrome bug): "Unchecked runtime.lastError: Could not establish connection. Receiving end does not exist."
         if (chrome.runtime.lastError) {
-          console.log("hhhhjjjhhh")
+          console.log(chrome.runtime.lastError);
       }});
 
       this.saveSettings(false);
@@ -81,7 +81,7 @@ class Background {
         }}, function() {
           //calling chrome.runtime.lastError is needed in order to suppress this error (Chrome bug): "Unchecked runtime.lastError: Could not establish connection. Receiving end does not exist."
           if (chrome.runtime.lastError) {
-            console.log("disabled..sdsdsdsdsd")
+            console.log(chrome.runtime.lastError);
           }
       });
 
@@ -103,23 +103,15 @@ class Background {
     };
 
     this.refreshYoutubeTab = () => {
-      console.log("gsgdsgsgsdgsgsdgs");
-
       chrome.tabs.query({
         active: true,
         currentWindow: true,
         url: '*://*.youtube.com/*',
       }, (tabs) => {
-        console.log("gsgdsgsgsdgsgsdgs")
-
         if (tabs.length > 0) {
-          console.log("gsgdsgsgsdgsgsdgs")
-
           chrome.tabs.sendMessage(tabs[0].id, {
             "message": "getCurrentTime"
           }, function (response) {
-
-            console.log("fdsfsdfsdf")
             //calling chrome.runtime.lastError is needed in order to suppress this error (Chrome bug): "Unchecked runtime.lastError: Could not establish connection. Receiving end does not exist."
             if (chrome.runtime.lastError || response === undefined) {
               //chrome.notifications.create('', {
@@ -144,7 +136,6 @@ class Background {
     }
 
     this.performInstallActions = (details) => {
-      //console.log();
       if (details.reason === "install") {
         const optionsUrl = chrome.runtime.getURL('html/options.html');
         chrome.tabs.create({
@@ -167,11 +158,11 @@ class Background {
         contexts: ["action"]
       });
 
-      chrome.contextMenus.create({
-        id: "donate-command",
-        title: "💳 Donate",
-        contexts: ["action"]
-      });
+      //chrome.contextMenus.create({
+      //  id: "donate-command",
+      //  title: "💳 Donate",
+      //  contexts: ["action"]
+      //});
     }
 
     this.migrateToReversedSignSyncValue = () => {
@@ -235,7 +226,7 @@ class Background {
           chrome.tabs.sendMessage(tab.id, message, function (response) {
             //calling chrome.runtime.lastError is needed in order to suppress this error (Chrome bug): "Unchecked runtime.lastError: Could not establish connection. Receiving end does not exist."
             if (chrome.runtime.lastError || response === undefined) {
-              console.log("sdsdsdsdsdsdsdsdsdjjjjjjjjjjjjjjjjj")
+				console.log(chrome.runtime.lastError);
             }});
         }
       });
@@ -281,7 +272,7 @@ class Background {
             chrome.tabs.sendMessage(tabs[i].id, message, function (response) {
           //calling chrome.runtime.lastError is needed in order to suppress this error (Chrome bug): "Unchecked runtime.lastError: Could not establish connection. Receiving end does not exist."
           if (chrome.runtime.lastError || response === undefined) {
-            console.log("sdsdsdsdsdsdsdsdsdjjjjjjjjjjjjjjjjj")
+			console.log(chrome.runtime.lastError);
           }});
           }
         });
@@ -301,8 +292,8 @@ class Background {
             chrome.tabs.sendMessage(tabs[i].id, message,function (response) {
               //calling chrome.runtime.lastError is needed in order to suppress this error (Chrome bug): "Unchecked runtime.lastError: Could not establish connection. Receiving end does not exist."
               if (chrome.runtime.lastError || response === undefined) {
-                console.log("sdsdsdsdsdsdsdsdsdjjjjjjjjjjjjjjjjj")
-              }});
+				console.log(chrome.runtime.lastError);
+			  }});
           }
         });
       }
@@ -361,13 +352,13 @@ class Background {
 
     //this.goToReviews = () => {
     //	chrome.tabs.create({
-    //	url: "https://chrome.google.com/webstore/detail/youtube-audiovideo-sync/mknmhikmjljhpccebpnplhicmcfjkgbk/reviews"
+    //	url: "https://chrome.google.com/webstore/detail/youtube-audiovideo-sync/poamchijmibccjdhblcikcnpkmkdkjji/reviews"
     //  });
     //}
 
     this.goToSupport = () => {
       chrome.tabs.create({
-        url: "https://chrome.google.com/webstore/detail/youtube-audiovideo-sync/mknmhikmjljhpccebpnplhicmcfjkgbk/support"
+        url: "https://chrome.google.com/webstore/detail/youtube-audiovideo-sync/poamchijmibccjdhblcikcnpkmkdkjji/support"
       });
     }
 
