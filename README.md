@@ -1,7 +1,7 @@
 # Youtube Audio/Video Sync Chrome Extension, Firefox Addon
 ![](img/icon128.png)
 
-:warning: :warning: :warning: Due to lack of time this project is no longer maintained!
+:warning: :warning: :warning: This project is currently not maintained!
 
 ### What does it do?
    There is always a delay when streaming audio from your device to another receiver (Apple TV, AirPlay speaker, Sonos, Network Player, TuneBlade, Bluetooth, etc.) This is causing the video and audio to be out of sync.
